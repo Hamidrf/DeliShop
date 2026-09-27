@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF8F2}
+a{color:#1d1b19}
+a:hover{color:#FF6F8E}
+@keyframes popIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:scale(1) rotate(-1deg);opacity:1}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#FBF8F2;color:#1d1b19;font-family:'Sniglet',system-ui,sans-serif">
+  <div style="max-width:1180px;margin:0 auto;padding:36px 28px 72px;display:flex;flex-direction:column;gap:30px">
+
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;font-weight:800;font-size:44px;line-height:1;letter-spacing:-1px">
+          <span style="text-shadow:3px 3px 0 #FF97AB;transform:rotate(-4deg)">D</span>
+          <span style="text-shadow:3px 3px 0 #FFE24D;transform:rotate(3deg) translateY(3px)">e</span>
+          <span style="text-shadow:3px 3px 0 #97DDD6;transform:rotate(-2deg)">l</span>
+          <span style="text-shadow:3px 3px 0 #D383FF;transform:rotate(5deg) translateY(2px)">i</span>
+          <span style="text-shadow:3px 3px 0 #FF844B;transform:rotate(-3deg);margin-left:5px">S</span>
+          <span style="text-shadow:3px 3px 0 #B6FF80;transform:rotate(2deg) translateY(2px)">h</span>
+          <span style="text-shadow:3px 3px 0 #FF97AB;transform:rotate(-5deg)">o</span>
+          <span style="text-shadow:3px 3px 0 #97DDD6;transform:rotate(3deg) translateY(2px)">p</span>
+        </div>
+        <span style="height:34px;padding:0 14px;border:2.5px solid #1d1b19;border-radius:999px;background:#FFE24D;display:flex;align-items:center;font-size:17px;transform:rotate(-3deg)">Studio</span>
+      </div>
+      <nav style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="DeliShop%20Admin.dc.html" style="height:48px;padding:0 22px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;display:flex;align-items:center;font-size:18px;text-decoration:none;box-shadow:3px 3px 0 #1d1b19">+ New product</a>
+        <a href="DeliShop%20Products.dc.html" style="height:48px;padding:0 22px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;display:flex;align-items:center;font-size:18px;text-decoration:none;box-shadow:3px 3px 0 #1d1b19">View shop →</a>
+      </nav>
+    </header>
+
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <h1 style="margin:0;font-size:38px;font-weight:800;line-height:1">All products</h1>
+        <span style="font-family:'Patrick Hand',cursive;font-size:24px;color:#8a837c">{{ countLabel }}</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.onClick }}" style="height:44px;padding:0 18px;border:2.5px solid #1d1b19;border-radius:999px;font-family:'Sniglet',sans-serif;font-size:17px;cursor:pointer;display:flex;align-items:center;gap:8px;color:{{ t.color }};background:{{ t.bg }};box-shadow:{{ t.shadow }};transition:all .2s">
+            <span>{{ t.label }}</span>
+            <span style="font-size:14px;opacity:.7">{{ t.count }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+      <p style="margin:0;font-family:'Patrick Hand',cursive;font-size:24px;color:#8a837c">No products here.</p>
+    </sc-if>
+
+    <main style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px">
+      <sc-for list="{{ items }}" as="p" hint-placeholder-count="8">
+        <div style="display:flex;flex-direction:column;border:2.5px solid #1d1b19;border-radius:24px;background:#fff;overflow:hidden;box-shadow:3px 4px 0 #1d1b19">
+          <div style="position:relative;height:170px;background:{{ p.color }};border-bottom:2.5px solid #1d1b19;display:flex;align-items:center;justify-content:center">
+            <div style="position:relative;overflow:hidden;width:{{ p.boxW }};height:{{ p.boxH }}">
+              <img src="{{ p.src }}" alt="{{ p.name }}" style="position:absolute;max-width:none;display:block;width:{{ p.imgW }};left:{{ p.imgL }};top:{{ p.imgT }};clip-path:{{ p.clip }};mix-blend-mode:{{ p.blend }};filter:{{ p.filter }}">
+            </div>
+            <sc-if value="{{ p.custom }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;top:12px;left:12px;height:28px;padding:0 10px;border:2px solid #1d1b19;border-radius:999px;background:#fff;display:flex;align-items:center;font-size:13px">New</span>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 14px 18px">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:20px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</span>
+              <span style="font-family:'Patrick Hand',cursive;font-size:20px;color:#5b5550">{{ p.meta }}</span>
+            </div>
+            <button onClick="{{ p.onDelete }}" aria-label="Delete" style="height:42px;padding:0 16px;flex-shrink:0;border-radius:999px;border:2px solid #1d1b19;background:#fff;font-family:'Sniglet',sans-serif;font-size:16px;color:#1d1b19;cursor:pointer" style-hover="background:#FF97AB">Delete</button>
+          </div>
+        </div>
+      </sc-for>
+    </main>
+  </div>
+
+  <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ cancel }}" style="position:fixed;inset:0;z-index:50;background:rgba(29,27,25,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+      <div onClick="{{ stop }}" role="alertdialog" aria-modal="true" style="width:100%;max-width:420px;background:#fff;border:3px solid #1d1b19;border-radius:30px;box-shadow:7px 9px 0 #1d1b19;padding:30px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;animation:popIn .35s cubic-bezier(.3,1.4,.5,1) both">
+        <div style="width:74px;height:74px;border-radius:50%;background:#FFE24D;border:3px solid #1d1b19;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:44px;line-height:1;animation:shake .5s .3s ease-in-out 2">!</div>
+        <span style="font-weight:800;font-size:30px;line-height:1.1;text-wrap:balance">Delete {{ c.name }}?</span>
+        <div style="width:120px;height:120px;border-radius:22px;border:2.5px solid #1d1b19;background:{{ c.color }};display:flex;align-items:center;justify-content:center;transform:rotate(-3deg)">
+          <div style="position:relative;overflow:hidden;width:{{ c.smW }};height:{{ c.smH }}">
+            <img src="{{ c.src }}" alt="" style="position:absolute;max-width:none;display:block;width:{{ c.imgW }};left:{{ c.imgL }};top:{{ c.imgT }};clip-path:{{ c.clip }};mix-blend-mode:{{ c.blend }};filter:{{ c.filter }}">
+          </div>
+        </div>
+        <span style="font-family:'Patrick Hand',cursive;font-size:23px;line-height:1.3;color:#5b5550;text-wrap:pretty">It will be removed from the shop and from every bag. This can't be undone.</span>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding-top:6px">
+          <button onClick="{{ cancel }}" style="height:54px;padding:0 24px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;font-family:'Sniglet',sans-serif;font-size:19px;color:#1d1b19;cursor:pointer;box-shadow:3px 3px 0 #1d1b19">Keep it</button>
+          <button onClick="{{ confirm }}" style="height:54px;padding:0 24px;border:2.5px solid #1d1b19;border-radius:999px;background:#E8364F;font-family:'Sniglet',sans-serif;font-size:19px;color:#fff;cursor:pointer;box-shadow:3px 3px 0 #1d1b19" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1d1b19">Yes, delete</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SW = 2048, SH = 2048, PW = 1125, PH = 1500;
+const COLS = [[0,509],[519,1018],[1029,1532],[1543,2048]];
+const ROWS = [[0,678],[689,1362],[1373,2048]];
+const COLORS = { mint:'#97DDD6', pink:'#FF97AB', orange:'#FF844B', purple:'#D383FF', yellow:'#FFE24D', green:'#B6FF80' };
+function cell(n, win, numNotch, rightNotch) {
+  const c = COLS[(n-1)%4], r = ROWS[Math.floor((n-1)/4)];
+  const cw = c[1]-c[0], ch = r[1]-r[0];
+  const X0 = c[0]+win[0]*cw, X1 = c[0]+win[1]*cw, Y0 = r[0]+win[2]*ch, Y1 = r[0]+win[3]*ch;
+  let clip = 'none';
+  if (numNotch || rightNotch) {
+    const nx = numNotch ? c[0]+numNotch[0]*cw : X0, ny = numNotch ? r[0]+numNotch[1]*ch : Y0;
+    const rx = rightNotch ? c[0]+rightNotch[0]*cw : X1, ry = rightNotch ? r[0]+rightNotch[1]*ch : Y0;
+    const p = (x,y) => `${(x/SW*100).toFixed(3)}% ${(y/SH*100).toFixed(3)}%`;
+    clip = `polygon(${[p(nx,Y0),p(rx,Y0),p(rx,ry),p(X1,ry),p(X1,Y1),p(X0,Y1),p(X0,ny),p(nx,ny)].join(',')})`;
+  }
+  return { src:'src/sheet.jpg', iw:SW, ih:SH, x:X0, y:Y0, w:X1-X0, h:Y1-Y0, clip };
+}
+const photo = (file, x, y, w, h) => ({ src:'src/'+file, iw:PW, ih:PH, x, y, w, h, clip:'none' });
+const BUILTIN = [
+  { name:'Super Fox', price:200, cat:'Keychains', bg:'orange', real:'assets/real/super-fox.png', ...photo('fox.jpeg',150,370,900,1000) },
+  { name:'Balloon', price:75, cat:'Keychains', bg:'yellow', ...cell(1,[.13,.78,0,.9]) },
+  { name:'Mystery Ball', price:500, cat:'Keychains', bg:'purple', ...cell(7,[.06,.97,0,.58],[.14,.12]) },
+  { name:'Heart Cards', price:100, cat:'Keychains', bg:'pink', ...photo('cards.jpeg',140,350,700,700) },
+  { name:'Flower', price:150, cat:'Earrings', bg:'green', ...cell(2,[.13,.78,0,.85]) },
+  { name:'Cat', price:150, cat:'Pins', bg:'mint', ...cell(8,[.13,.82,0,.78]) },
+  { name:'Book', price:250, cat:'Pins', bg:'mint', ...photo('book.jpeg',275,410,700,700) },
+  { name:'Lip', price:100, cat:'Earrings', bg:'pink', ...cell(11,[0,.86,.2,1],null,[.74,.37]) },
+  { name:'Charms', price:100, cat:'Earrings', bg:'purple', ...cell(3,[.13,.78,0,.85]) },
+  { name:'Panda', price:150, cat:'Pins', bg:'yellow', ...photo('panda.jpeg',180,300,860,1020) },
+  { name:'Guitar', price:200, cat:'Pins', bg:'orange', ...cell(12,[.13,.8,0,1]) },
+  { name:'Card', price:100, cat:'Pins', bg:'green', ...cell(4,[.13,.8,0,.65]) },
+  { name:'Snail', price:150, cat:'Keychains', bg:'pink', ...cell(10,[0,.82,0,1],[.15,.13]) },
+  { name:'Butterfly & Flower', price:150, cat:'Earrings', bg:'mint', ...photo('bf.jpeg',180,400,600,710) },
+  { name:'Banana', price:75, cat:'Keychains', bg:'yellow', ...cell(5,[.13,.78,0,.8]) },
+  { name:'Beachwear', price:250, cat:'Pins', bg:'purple', ...cell(9,[0,1,0,1],[.13,.13],[.76,.73]) },
+];
+const CATS = ['All','Keychains','Earrings','Pins'];
+const CAT_COLOR = { All:'#1d1b19', Keychains:COLORS.yellow, Earrings:COLORS.pink, Pins:COLORS.mint };
+const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
+const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+function thumb(p, box) {
+  if (p.real) return { src: p.real, w: box + 'px', h: box + 'px', imgW: '100%', imgL: '0%', imgT: '0%', clip: 'none', blend: 'normal', filter: 'none' };
+  const ar = p.w / p.h;
+  return {
+    src: p.src, w: (ar >= 1 ? box : box * ar) + 'px', h: (ar >= 1 ? box / ar : box) + 'px',
+    imgW: (p.iw / p.w * 100) + '%', imgL: (-p.x / p.w * 100) + '%', imgT: (-p.y / p.h * 100) + '%',
+    clip: p.clip || 'none', blend: 'multiply',
+    filter: p.src === 'src/sheet.jpg' ? 'contrast(1.25) brightness(1.08)' : 'contrast(1.35) brightness(1.12) saturate(1.2)',
+  };
+}
+
+class Component extends DCLogic {
+  state = { cat: 'All', hidden: [], custom: [], pending: null };
+
+  componentDidMount() {
+    this.load();
+    this._st = () => this.load();
+    this._key = (e) => { if (e.key === 'Escape') this.setState({ pending: null }); };
+    window.addEventListener('storage', this._st);
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() { window.removeEventListener('storage', this._st); window.removeEventListener('keydown', this._key); }
+
+  load() {
+    const custom = read('delishop-products').map(c => ({
+      id: c.id, name: c.name, price: c.price, cat: c.cat, bg: c.bg, real: c.photo || null,
+      src: c.drawing, iw: c.dw, ih: c.dh, x: 0, y: 0, w: c.dw, h: c.dh, clip: 'none', custom: true,
+    }));
+    this.setState({ hidden: read('delishop-hidden'), custom });
+  }
+
+  all() {
+    return this.state.custom.concat(BUILTIN).filter(p => !this.state.hidden.includes(p.name));
+  }
+
+  doDelete() {
+    const p = this.state.pending;
+    if (!p) return;
+    if (p.custom) write('delishop-products', read('delishop-products').filter(c => c.id !== p.id));
+    else write('delishop-hidden', Array.from(new Set(read('delishop-hidden').concat(p.name))));
+    write('delishop-bag', read('delishop-bag').filter(b => b.name !== p.name));
+    this.setState({ pending: null });
+    this.load();
+  }
+
+  renderVals() {
+    const { cat, pending } = this.state;
+    const all = this.all();
+    const list = all.filter(p => cat === 'All' || p.cat === cat);
+    const items = list.map(p => {
+      const t = thumb(p, 130);
+      return {
+        name: p.name, meta: p.cat + ' · ' + p.price + 't', color: COLORS[p.bg] || '#fff', custom: !!p.custom,
+        src: t.src, boxW: t.w, boxH: t.h, imgW: t.imgW, imgL: t.imgL, imgT: t.imgT, clip: t.clip, blend: t.blend, filter: t.filter,
+        onDelete: () => this.setState({ pending: p }),
+      };
+    });
+    let c = {};
+    if (pending) {
+      const t = thumb(pending, 90);
+      c = { name: pending.name, color: COLORS[pending.bg] || '#fff', src: t.src, smW: t.w, smH: t.h, imgW: t.imgW, imgL: t.imgL, imgT: t.imgT, clip: t.clip, blend: t.blend, filter: t.filter };
+    }
+    return {
+      countLabel: all.length + (all.length === 1 ? ' item' : ' items'),
+      tabs: CATS.map(k => {
+        const on = k === cat;
+        return {
+          label: k, count: k === 'All' ? all.length : all.filter(p => p.cat === k).length,
+          bg: on ? CAT_COLOR[k] : '#fff', color: on && k === 'All' ? '#fff' : '#1d1b19',
+          shadow: on ? '1px 1px 0 #1d1b19' : '3px 3px 0 #1d1b19',
+          onClick: () => this.setState({ cat: k }),
+        };
+      }),
+      items, empty: list.length === 0,
+      confirmOpen: !!pending, c,
+      cancel: () => this.setState({ pending: null }),
+      confirm: () => this.doDelete(),
+      stop: (e) => e.stopPropagation(),
+    };
+  }
+}
+</script>
+</body>
+</html>

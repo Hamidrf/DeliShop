@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF8F2}
+a{color:#1d1b19}
+a:hover{color:#FF6F8E}
+input{font-family:inherit}
+@keyframes stampIn{0%{transform:scale(2.2) rotate(-30deg);opacity:0}60%{transform:scale(.92) rotate(-10deg);opacity:1}100%{transform:scale(1) rotate(-14deg)}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#FBF8F2;color:#1d1b19;font-family:'Sniglet',system-ui,sans-serif">
+  <div style="max-width:1120px;margin:0 auto;padding:36px 28px 72px;display:flex;flex-direction:column;gap:34px">
+
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <a href="DeliShop%20Products.dc.html" style="display:flex;font-weight:800;font-size:44px;line-height:1;letter-spacing:-1px;text-decoration:none;color:#1d1b19">
+        <span style="text-shadow:3px 3px 0 #FF97AB;transform:rotate(-4deg)">D</span>
+        <span style="text-shadow:3px 3px 0 #FFE24D;transform:rotate(3deg) translateY(3px)">e</span>
+        <span style="text-shadow:3px 3px 0 #97DDD6;transform:rotate(-2deg)">l</span>
+        <span style="text-shadow:3px 3px 0 #D383FF;transform:rotate(5deg) translateY(2px)">i</span>
+        <span style="text-shadow:3px 3px 0 #FF844B;transform:rotate(-3deg);margin-left:5px">S</span>
+        <span style="text-shadow:3px 3px 0 #B6FF80;transform:rotate(2deg) translateY(2px)">h</span>
+        <span style="text-shadow:3px 3px 0 #FF97AB;transform:rotate(-5deg)">o</span>
+        <span style="text-shadow:3px 3px 0 #97DDD6;transform:rotate(3deg) translateY(2px)">p</span>
+      </a>
+      <a href="DeliShop%20Products.dc.html" style="height:48px;padding:0 22px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;display:flex;align-items:center;font-size:18px;text-decoration:none;box-shadow:3px 3px 0 #1d1b19">← Keep shopping</a>
+    </header>
+
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+      <div style="flex:1 1 360px;max-width:460px;min-width:0;margin:0 auto;position:relative;transform:rotate(-1.2deg);filter:drop-shadow(2.5px 0 0 #1d1b19) drop-shadow(-2.5px 0 0 #1d1b19) drop-shadow(0 2.5px 0 #1d1b19) drop-shadow(0 -2.5px 0 #1d1b19) drop-shadow(6px 8px 0 #1d1b19)">
+        <div style="height:14px;background:radial-gradient(circle at 11px 0,transparent 9px,#fff 10px);background-size:22px 14px;background-repeat:repeat-x"></div>
+        <div style="background:#fff;padding:18px 30px 26px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-weight:800;font-size:40px;line-height:1">Invoice</span>
+              <span style="font-family:'Patrick Hand',cursive;font-size:21px;color:#5b5550">No. {{ orderNo }}</span>
+            </div>
+            <span style="font-family:'Patrick Hand',cursive;font-size:21px;color:#5b5550;padding-top:6px">{{ today }}</span>
+          </div>
+
+          <div style="height:0;border-top:3px dashed #1d1b19;opacity:.3"></div>
+
+          <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 0;text-align:center">
+              <span style="font-family:'Patrick Hand',cursive;font-size:26px">Your bag is empty.</span>
+              <a href="DeliShop%20Products.dc.html" style="font-size:18px">Pick something cute →</a>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ lines }}" as="l" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:58px;height:58px;flex-shrink:0;border-radius:16px;border:2px solid #1d1b19;background:{{ l.color }};display:flex;align-items:center;justify-content:center;overflow:hidden;transform:rotate({{ l.tilt }})">
+                  <div style="position:relative;overflow:hidden;width:{{ l.boxW }};height:{{ l.boxH }}">
+                    <img src="{{ l.src }}" alt="" style="position:absolute;max-width:none;display:block;width:{{ l.imgW }};left:{{ l.imgL }};top:{{ l.imgT }};clip-path:{{ l.clip }};mix-blend-mode:{{ l.blend }}">
+                  </div>
+                </div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                  <span style="font-family:'Patrick Hand',cursive;font-size:24px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.name }}</span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <button onClick="{{ l.dec }}" aria-label="Less" style="width:28px;height:28px;border-radius:50%;border:2px solid #1d1b19;background:#fff;font-family:'Sniglet',sans-serif;font-size:17px;line-height:1;color:#1d1b19;cursor:pointer;padding:0">−</button>
+                    <span style="min-width:22px;text-align:center;font-size:17px">{{ l.qty }}</span>
+                    <button onClick="{{ l.inc }}" aria-label="More" style="width:28px;height:28px;border-radius:50%;border:2px solid #1d1b19;background:#fff;font-family:'Sniglet',sans-serif;font-size:17px;line-height:1;color:#1d1b19;cursor:pointer;padding:0">+</button>
+                  </div>
+                </div>
+                <span style="font-family:'Patrick Hand',cursive;font-size:24px;white-space:nowrap">{{ l.total }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="height:0;border-top:3px dashed #1d1b19;opacity:.3"></div>
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+            <span style="font-size:22px">Total</span>
+            <span style="position:relative;font-weight:800;font-size:44px;line-height:1;padding:0 6px">
+              <span style="position:absolute;left:-4px;right:-4px;bottom:2px;height:20px;background:#FFE24D;border-radius:10px 4px 12px 6px;transform:rotate(-2deg)"></span>
+              <span style="position:relative">{{ total }}</span>
+            </span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:6px">
+            <span style="font-family:'Patrick Hand',cursive;font-size:21px;color:#5b5550">Thank you for supporting a little artist!</span>
+          </div>
+        </div>
+        <div style="height:14px;background:radial-gradient(circle at 11px 0,transparent 9px,#fff 10px);background-size:22px 14px;background-repeat:repeat-x;transform:scaleY(-1)"></div>
+
+        <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;right:22px;top:120px;width:132px;height:132px;border-radius:50%;border:4px solid #E8364F;color:#E8364F;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:22px;line-height:1.05;animation:stampIn .6s cubic-bezier(.3,1.3,.5,1) both;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 5px #fff,inset 0 0 0 7px #E8364F">PAID<span style="font-family:'Patrick Hand',cursive;font-size:17px;font-weight:400">thank you!</span></div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ submit }}" style="flex:999 1 420px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:28px;background:#fff;border:2.5px solid #1d1b19;border-radius:30px;padding:30px;box-shadow:5px 6px 0 #1d1b19">
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:38px;height:38px;border-radius:50%;background:#FF97AB;border:2.5px solid #1d1b19;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">1</span>
+              <span style="font-size:24px">Who is it for?</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:17px">Name</span>
+                <input value="{{ name }}" onChange="{{ onName }}" placeholder="Sara" autocomplete="name" style="height:52px;border:2.5px solid #1d1b19;border-radius:16px;padding:0 16px;font-size:20px;background:#FBF8F2;outline:none;color:#1d1b19;min-width:0" style-focus="background:#fff;box-shadow:3px 3px 0 #1d1b19">
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:17px">Phone</span>
+                <input value="{{ phone }}" onChange="{{ onPhone }}" type="tel" inputmode="tel" placeholder="0912 345 6789" autocomplete="tel" style="height:52px;border:2.5px solid #1d1b19;border-radius:16px;padding:0 16px;font-size:20px;background:#FBF8F2;outline:none;color:#1d1b19;min-width:0;letter-spacing:.5px" style-focus="background:#fff;box-shadow:3px 3px 0 #1d1b19">
+              </label>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:38px;height:38px;border-radius:50%;background:#FFE24D;border:2.5px solid #1d1b19;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">2</span>
+              <span style="font-size:24px">Send {{ total }} to this card</span>
+            </div>
+            <div style="position:relative;border:2.5px solid #1d1b19;border-radius:22px;background:#97DDD6;padding:22px 22px 18px;display:flex;flex-direction:column;gap:16px;overflow:hidden;box-shadow:3px 3px 0 #1d1b19;container-type:inline-size">
+              <div style="position:absolute;right:-40px;top:-50px;width:120px;height:120px;border-radius:50%;background:#FFE24D;border:2.5px solid #1d1b19"></div>
+              <div style="position:absolute;right:62px;top:-22px;width:52px;height:52px;border-radius:50%;background:#FF97AB;border:2.5px solid #1d1b19"></div>
+              <div style="width:46px;height:34px;border-radius:8px;border:2.5px solid #1d1b19;background:#FFE24D;position:relative"></div>
+              <span style="position:relative;z-index:1;font-weight:800;font-size:clamp(18px,8cqw,32px);letter-spacing:1px;line-height:1;white-space:nowrap">{{ cardNumber }}</span>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-family:'Patrick Hand',cursive;font-size:22px">{{ cardHolder }}</span>
+                <button type="button" onClick="{{ copy }}" style="height:40px;padding:0 16px;border:2px solid #1d1b19;border-radius:999px;background:#fff;font-family:'Sniglet',sans-serif;font-size:16px;color:#1d1b19;cursor:pointer">{{ copyLabel }}</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:38px;height:38px;border-radius:50%;background:#D383FF;border:2.5px solid #1d1b19;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">3</span>
+              <span style="font-size:24px">Upload the receipt</span>
+            </div>
+            <div onClick="{{ pick }}" onDragOver="{{ allowDrop }}" onDrop="{{ onDrop }}" style="position:relative;min-height:150px;border:2.5px dashed #1d1b19;border-radius:22px;background:#FBF8F2;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden" style-hover="background:#fff">
+              <sc-if value="{{ receiptUrl }}" hint-placeholder-val="{{ false }}">
+                <img src="{{ receiptUrl }}" alt="Receipt" style="max-width:100%;max-height:260px;display:block;padding:10px;box-sizing:border-box">
+              </sc-if>
+              <sc-if value="{{ noReceipt }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:16px">
+                  <span style="font-size:36px;line-height:1">↑</span>
+                  <span style="font-family:'Patrick Hand',cursive;font-size:21px;color:#5b5550">Drop a screenshot of your payment</span>
+                </div>
+              </sc-if>
+            </div>
+            <input type="file" accept="image/*" ref="{{ fileRef }}" onChange="{{ onFile }}" style="display:none">
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <button type="submit" style="height:62px;border:2.5px solid #1d1b19;border-radius:999px;background:#1d1b19;color:#fff;font-family:'Sniglet',sans-serif;font-size:23px;cursor:pointer;box-shadow:4px 4px 0 #FF97AB" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #FF97AB">Send my order</button>
+            <span style="font-family:'Patrick Hand',cursive;font-size:21px;color:#C8283F;text-align:center">{{ error }}</span>
+          </div>
+        </form>
+      </sc-if>
+
+      <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:999 1 420px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;align-items:flex-start;background:#B6FF80;border:2.5px solid #1d1b19;border-radius:30px;padding:36px;box-shadow:5px 6px 0 #1d1b19">
+          <span style="font-weight:800;font-size:44px;line-height:1.05">Yay, thank you {{ firstName }}!</span>
+          <span style="font-family:'Patrick Hand',cursive;font-size:26px;line-height:1.3;text-wrap:pretty">We got your order. Once we check the payment, we'll pack it up and send it to you. We'll call {{ phone }} if we need anything.</span>
+          <a href="DeliShop%20Products.dc.html" style="height:54px;padding:0 26px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;display:flex;align-items:center;font-size:19px;text-decoration:none;box-shadow:3px 3px 0 #1d1b19">Back to the shop</a>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;cardNumber&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;6037 9975 1234 5678&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cardHolder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;DeliShop&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const COLORS = { pink:'#FF97AB', yellow:'#FFE24D', mint:'#97DDD6', purple:'#D383FF', orange:'#FF844B', green:'#B6FF80' };
+const BAG = 'delishop-bag';
+
+class Component extends DCLogic {
+  state = { bag: [], name: '', phone: '', receipt: null, error: '', copied: false, done: false, orderNo: String(1000 + Math.floor(Math.random() * 9000)) };
+  fileRef = React.createRef();
+
+  componentDidMount() {
+    try { this.setState({ bag: JSON.parse(localStorage.getItem(BAG) || '[]') }); } catch (e) {}
+  }
+
+  saveBag(bag) {
+    try { localStorage.setItem(BAG, JSON.stringify(bag)); } catch (e) {}
+    this.setState({ bag });
+  }
+  changeQty(name, d) {
+    const bag = this.state.bag.map(b => b.name === name ? { ...b, qty: b.qty + d } : b).filter(b => b.qty > 0);
+    this.saveBag(bag);
+  }
+  setReceipt(f) {
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => this.setState({ receipt: r.result, error: '' });
+    r.readAsDataURL(f);
+  }
+  submit(e) {
+    e.preventDefault();
+    const s = this.state;
+    const miss = [];
+    if (!s.bag.length) miss.push('something in your bag');
+    if (!s.name.trim()) miss.push('your name');
+    if (s.phone.replace(/\D/g, '').length < 10) miss.push('a phone number');
+    if (!s.receipt) miss.push('the receipt');
+    if (miss.length) { this.setState({ error: 'We still need ' + miss.join(', ') + '.' }); return; }
+    try {
+      const orders = JSON.parse(localStorage.getItem('delishop-orders') || '[]');
+      orders.push({ no: s.orderNo, date: Date.now(), name: s.name.trim(), phone: s.phone, items: s.bag.map(b => ({ name: b.name, price: b.price, qty: b.qty })) });
+      localStorage.setItem('delishop-orders', JSON.stringify(orders));
+      localStorage.removeItem(BAG);
+    } catch (e) {}
+    this.setState({ done: true, error: '' });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const card = this.props.cardNumber ?? '6037 9975 1234 5678';
+    const total = s.bag.reduce((n, b) => n + b.price * b.qty, 0);
+    const lines = s.bag.map((b, i) => {
+      const real = !!b.real;
+      const ar = real ? 1 : b.w / b.h;
+      const box = 50;
+      const boxW = ar >= 1 ? box : box * ar, boxH = ar >= 1 ? box / ar : box;
+      return {
+        name: b.name, qty: b.qty, total: (b.price * b.qty) + 't', color: COLORS[b.bg] || '#fff',
+        tilt: [-4, 3, -2, 4][i % 4] + 'deg',
+        src: real ? b.real : b.src,
+        boxW: boxW + 'px', boxH: boxH + 'px',
+        imgW: real ? '100%' : (b.iw / b.w * 100) + '%',
+        imgL: real ? '0%' : (-b.x / b.w * 100) + '%',
+        imgT: real ? '0%' : (-b.y / b.h * 100) + '%',
+        clip: real ? 'none' : (b.clip || 'none'),
+        blend: real ? 'normal' : 'multiply',
+        inc: () => this.changeQty(b.name, 1),
+        dec: () => this.changeQty(b.name, -1),
+      };
+    });
+    return {
+      orderNo: s.orderNo,
+      today: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      lines, empty: !s.bag.length && !s.done,
+      total: total + 't',
+      done: s.done, notDone: !s.done,
+      name: s.name, phone: s.phone,
+      firstName: s.name.trim().split(' ')[0],
+      onName: (e) => this.setState({ name: e.target.value }),
+      onPhone: (e) => this.setState({ phone: e.target.value.replace(/[^\d\s+]/g, '') }),
+      cardNumber: card,
+      cardHolder: this.props.cardHolder ?? 'DeliShop',
+      copyLabel: s.copied ? 'Copied ✓' : 'Copy number',
+      copy: () => {
+        try { navigator.clipboard.writeText(card.replace(/\s/g, '')); } catch (e) {}
+        this.setState({ copied: true }); clearTimeout(this._c); this._c = setTimeout(() => this.setState({ copied: false }), 1800);
+      },
+      fileRef: this.fileRef,
+      pick: () => this.fileRef.current && this.fileRef.current.click(),
+      onFile: (e) => { this.setReceipt(e.target.files[0]); e.target.value = ''; },
+      allowDrop: (e) => e.preventDefault(),
+      onDrop: (e) => { e.preventDefault(); this.setReceipt(e.dataTransfer.files[0]); },
+      receiptUrl: s.receipt || '', noReceipt: !s.receipt,
+      submit: (e) => this.submit(e),
+      error: s.error,
+    };
+  }
+}
+</script>
+</body>
+</html>

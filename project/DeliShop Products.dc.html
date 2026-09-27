@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF8F2}
+a{color:#1d1b19}
+a:hover{color:#FF6F8E}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes dangle{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+@keyframes pinDrop{0%{transform:translateY(-160px) scale(1.5) rotate(-25deg);opacity:0}55%{transform:translateY(0) scale(.9) rotate(6deg);opacity:1}75%{transform:scale(1.06) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes tilt{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes shine{0%,55%{transform:translateX(-160%) rotate(20deg)}100%{transform:translateX(160%) rotate(20deg)}}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes handSide{0%{transform:translateX(-110%)}100%{transform:translateX(0)}}
+@keyframes swing{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}10%{transform:translateY(0) scale(1.06,.94)}40%{transform:translateY(-38px) scale(.97,1.03)}70%{transform:translateY(0) scale(1.04,.96)}}
+@keyframes wiggle{0%,100%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(7deg) translateY(-10px)}}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-16px) rotate(2deg)}}
+@keyframes handIn{0%{transform:translateY(-120%)}100%{transform:translateY(0)}}
+@keyframes palmIn{0%{transform:translateY(120%)}100%{transform:translateY(0)}}
+@keyframes eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#FBF8F2;color:#1d1b19;font-family:'Sniglet',system-ui,sans-serif">
+  <div style="max-width:1280px;margin:0 auto;padding:36px 32px 64px;display:flex;flex-direction:column;gap:36px">
+
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;font-weight:800;font-size:56px;line-height:1;letter-spacing:-1px">
+          <span style="text-shadow:4px 4px 0 #FF97AB;transform:rotate(-4deg)">D</span>
+          <span style="text-shadow:4px 4px 0 #FFE24D;transform:rotate(3deg) translateY(4px)">e</span>
+          <span style="text-shadow:4px 4px 0 #97DDD6;transform:rotate(-2deg)">l</span>
+          <span style="text-shadow:4px 4px 0 #D383FF;transform:rotate(5deg) translateY(2px)">i</span>
+          <span style="text-shadow:4px 4px 0 #FF844B;transform:rotate(-3deg);margin-left:6px">S</span>
+          <span style="text-shadow:4px 4px 0 #B6FF80;transform:rotate(2deg) translateY(3px)">h</span>
+          <span style="text-shadow:4px 4px 0 #FF97AB;transform:rotate(-5deg)">o</span>
+          <span style="text-shadow:4px 4px 0 #97DDD6;transform:rotate(3deg) translateY(2px)">p</span>
+        </div>
+        <div style="font-family:'Patrick Hand',cursive;font-size:22px;color:#5b5550;padding-left:4px">Drawn by a kid. Made for you.</div>
+      </div>
+      <button onClick="{{ openBag }}" style="display:flex;align-items:center;gap:10px;height:52px;padding:0 10px 0 22px;border:2.5px solid #1d1b19;border-radius:999px;background:#fff;font-family:'Sniglet',sans-serif;font-size:20px;color:#1d1b19;cursor:pointer;box-shadow:3px 3px 0 #1d1b19" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1d1b19">
+        <span>Bag</span>
+        <span style="{{ bagBadgeStyle }}">{{ bagCount }}</span>
+      </button>
+    </header>
+
+    <nav style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+        <button onClick="{{ tab.onClick }}" style="height:48px;padding:0 22px;border:2.5px solid #1d1b19;border-radius:999px;font-family:'Sniglet',sans-serif;font-size:19px;color:{{ tab.color }};cursor:pointer;background:{{ tab.bg }};box-shadow:{{ tab.shadow }};transform:{{ tab.tilt }};transition:all .2s">{{ tab.label }}</button>
+      </sc-for>
+      <span style="font-family:'Patrick Hand',cursive;font-size:20px;color:#8a837c;margin-left:auto">hover a drawing to color it in</span>
+    </nav>
+
+    <main style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:26px">
+      <sc-for list="{{ items }}" as="item" hint-placeholder-count="8">
+        <div onMouseEnter="{{ item.onEnter }}" onMouseLeave="{{ item.onLeave }}" onClick="{{ item.onToggle }}" style="position:relative;aspect-ratio:5/7;border-radius:24px;overflow:hidden;border:2.5px solid #1d1b19;background:#eee;cursor:pointer;transform:{{ item.tilt }};box-shadow:{{ item.shadow }};transition:transform .35s cubic-bezier(.3,1.6,.5,1),box-shadow .35s">
+
+          <div style="position:absolute;inset:0;filter:grayscale(1) brightness(1.04);background-image:url({{ item.bg }});background-size:cover;background-position:top center">
+            <div style="position:absolute;left:7%;right:19%;top:30%;bottom:6%;container-type:size;display:flex;align-items:center;justify-content:center">
+              <div style="position:relative;overflow:hidden;width:{{ item.winW }};aspect-ratio:{{ item.ar }}">
+                <img src="{{ item.src }}" alt="{{ item.name }}" style="position:absolute;max-width:none;display:block;width:{{ item.imgW }};left:{{ item.imgL }};top:{{ item.imgT }};clip-path:{{ item.clip }};mix-blend-mode:multiply;filter:{{ item.imgFilter }}">
+              </div>
+            </div>
+          </div>
+
+          <div style="position:absolute;inset:0;background-image:url({{ item.bg }});background-size:cover;background-position:top center;-webkit-mask-image:{{ dripMask }};mask-image:{{ dripMask }};-webkit-mask-size:100% 220%;mask-size:100% 220%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:{{ item.maskPos }};mask-position:{{ item.maskPos }};transition:{{ maskTransition }}">
+            <div style="position:absolute;left:7%;right:19%;top:30%;bottom:6%;container-type:size;display:flex;align-items:center;justify-content:center">
+              <div style="position:relative;overflow:hidden;width:{{ item.winW }};aspect-ratio:{{ item.ar }}">
+                <img src="{{ item.src }}" alt="" style="position:absolute;max-width:none;display:block;width:{{ item.imgW }};left:{{ item.imgL }};top:{{ item.imgT }};clip-path:{{ item.clip }};mix-blend-mode:multiply;filter:{{ item.imgFilter }}">
+              </div>
+            </div>
+          </div>
+
+          <div style="position:absolute;top:14px;left:18px;font-weight:800;font-size:32px;line-height:1">{{ item.num }}</div>
+          <div style="position:absolute;top:18px;right:12px;writing-mode:vertical-rl;font-family:'Patrick Hand',cursive;font-size:28px;line-height:1;white-space:nowrap;display:flex;gap:10px">
+            <span>{{ item.price }}</span>
+            <span>{{ item.name }}</span>
+          </div>
+          <button onClick="{{ item.onAdd }}" aria-label="Add to bag" style="position:absolute;left:14px;bottom:14px;width:46px;height:46px;border-radius:50%;border:2.5px solid #1d1b19;background:#fff;font-family:'Sniglet',sans-serif;font-size:28px;line-height:1;color:#1d1b19;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 3px;opacity:{{ item.btnOpacity }};transform:{{ item.btnScale }};transition:opacity .25s,transform .3s cubic-bezier(.3,1.6,.5,1)" style-hover="background:#1d1b19;color:#fff">+</button>
+        </div>
+      </sc-for>
+    </main>
+
+    <footer style="display:flex;justify-content:center;font-family:'Patrick Hand',cursive;font-size:22px;color:#8a837c;padding-top:12px">Every piece starts as a drawing.</footer>
+
+    <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:50;background:rgba(29,27,25,.55);overflow-y:auto;display:flex;padding:28px 20px;box-sizing:border-box">
+        <div onClick="{{ stop }}" style="position:relative;margin:auto;width:100%;max-width:1000px;border-radius:34px;border:3px solid #1d1b19;box-shadow:8px 10px 0 #1d1b19;background-color:{{ m.color }};background-image:url({{ m.bg }});background-size:100% auto;background-repeat:no-repeat;background-position:top center;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));overflow:hidden">
+
+          <button onClick="{{ closeModal }}" aria-label="Close" style="position:absolute;top:16px;right:16px;z-index:5;width:48px;height:48px;border-radius:50%;border:2.5px solid #1d1b19;background:#fff;font-family:'Sniglet',sans-serif;font-size:24px;color:#1d1b19;cursor:pointer;box-shadow:3px 3px 0 #1d1b19;display:flex;align-items:center;justify-content:center;padding:0" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1d1b19">✕</button>
+
+          <div style="position:relative;min-height:540px;overflow:hidden">{{ m.stage }}</div>
+
+          <div style="padding:96px 36px 36px 16px;display:flex;flex-direction:column;gap:18px;justify-content:flex-end">
+            <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+              <span style="font-weight:800;font-size:30px;width:52px;height:52px;border-radius:50%;background:#fff;border:2.5px solid #1d1b19;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center">{{ m.num }}</span>
+              <h2 style="margin:0;font-weight:800;font-size:52px;line-height:1;letter-spacing:-1px;text-wrap:balance">{{ m.name }}</h2>
+            </div>
+
+            <div style="background:#fff;border:2.5px solid #1d1b19;border-radius:24px 24px 24px 6px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;box-shadow:4px 4px 0 #1d1b19">
+              <p style="margin:0;font-family:'Patrick Hand',cursive;font-size:25px;line-height:1.3;text-wrap:pretty">{{ m.story }}</p>
+              <div style="display:flex;align-items:center;gap:14px">
+                <button onClick="{{ togglePlay }}" aria-label="Play story" style="width:54px;height:54px;flex-shrink:0;border-radius:50%;border:2.5px solid #1d1b19;background:{{ m.accent }};font-size:20px;color:#1d1b19;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 0 {{ playPad }}">{{ playIcon }}</button>
+                <div style="flex:1;display:flex;flex-direction:column;gap:7px;min-width:0">
+                  <span style="font-size:16px">{{ playLabel }}</span>
+                  <div style="height:12px;border-radius:999px;border:2px solid #1d1b19;background:#f3eee6;overflow:hidden">
+                    <div style="height:100%;background:#1d1b19;border-radius:999px;width:{{ progressPct }};transition:width .3s"></div>
+                  </div>
+                </div>
+                {{ eqBars }}
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:6px">
+              <span style="font-weight:800;font-size:46px;line-height:1">{{ m.price }}</span>
+              <button onClick="{{ addFromModal }}" style="height:60px;padding:0 30px;border:2.5px solid #1d1b19;border-radius:999px;background:#1d1b19;color:#fff;font-family:'Sniglet',sans-serif;font-size:22px;cursor:pointer;box-shadow:4px 4px 0 #fff;display:flex;align-items:center;gap:10px" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #fff">{{ addLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;alwaysColor&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dripSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.9,&quot;min&quot;:0.3,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;}}">
+const SW = 2048, SH = 2048, PW = 1125, PH = 1500;
+const COLS = [[0,509],[519,1018],[1029,1532],[1543,2048]];
+const ROWS = [[0,678],[689,1362],[1373,2048]];
+const COLORS = { mint:'#97DDD6', pink:'#FF97AB', orange:'#FF844B', purple:'#D383FF', yellow:'#FFE24D', green:'#B6FF80' };
+
+// sketch sheet cell: window + optional notches, all in cell fractions
+function cell(n, win, numNotch, rightNotch) {
+  const c = COLS[(n-1)%4], r = ROWS[Math.floor((n-1)/4)];
+  const cw = c[1]-c[0], ch = r[1]-r[0];
+  const X0 = c[0]+win[0]*cw, X1 = c[0]+win[1]*cw, Y0 = r[0]+win[2]*ch, Y1 = r[0]+win[3]*ch;
+  let clip = 'none';
+  if (numNotch || rightNotch) {
+    const nx = numNotch ? c[0]+numNotch[0]*cw : X0, ny = numNotch ? r[0]+numNotch[1]*ch : Y0;
+    const rx = rightNotch ? c[0]+rightNotch[0]*cw : X1, ry = rightNotch ? r[0]+rightNotch[1]*ch : Y0;
+    const p = (x,y) => `${(x/SW*100).toFixed(3)}% ${(y/SH*100).toFixed(3)}%`;
+    clip = `polygon(${[p(nx,Y0),p(rx,Y0),p(rx,ry),p(X1,ry),p(X1,Y1),p(X0,Y1),p(X0,ny),p(nx,ny)].join(',')})`;
+  }
+  return { src:'src/sheet.jpg', iw:SW, ih:SH, x:X0, y:Y0, w:X1-X0, h:Y1-Y0, clip, photo:false };
+}
+const photo = (file, x, y, w, h) => ({ src:'src/'+file, iw:PW, ih:PH, x, y, w, h, clip:'none', photo:true });
+
+const PRODUCTS = [
+  { name:'Super Fox', price:200, cat:'Animals', bg:'orange', ...photo('fox.jpeg',150,370,900,1000) },
+  { name:'Balloon', price:75, cat:'Keychains', bg:'yellow', ...cell(1,[.13,.78,0,.9]) },
+  { name:'Mystery Ball', price:500, cat:'Fun Stuff', bg:'purple', ...cell(7,[.06,.97,0,.58],[.14,.12]) },
+  { name:'Heart Cards', price:100, cat:'Keychains', bg:'pink', ...photo('cards.jpeg',140,350,700,700) },
+  { name:'Flower', price:150, cat:'Keychains', bg:'green', ...cell(2,[.13,.78,0,.85]) },
+  { name:'Cat', price:150, cat:'Animals', bg:'mint', ...cell(8,[.13,.82,0,.78]) },
+  { name:'Book', price:250, cat:'Books', bg:'mint', ...photo('book.jpeg',275,410,700,700) },
+  { name:'Lip', price:100, cat:'Fun Stuff', bg:'pink', ...cell(11,[0,.86,.2,1],null,[.74,.37]) },
+  { name:'Charms', price:100, cat:'Keychains', bg:'purple', ...cell(3,[.13,.78,0,.85]) },
+  { name:'Panda', price:150, cat:'Animals', bg:'yellow', ...photo('panda.jpeg',180,300,860,1020) },
+  { name:'Guitar', price:200, cat:'Fun Stuff', bg:'orange', ...cell(12,[.13,.8,0,1]) },
+  { name:'Card', price:100, cat:'Keychains', bg:'green', ...cell(4,[.13,.8,0,.65]) },
+  { name:'Snail', price:150, cat:'Animals', bg:'pink', ...cell(10,[0,.82,0,1],[.15,.13]) },
+  { name:'Butterfly & Flower', price:150, cat:'Keychains', bg:'mint', ...photo('bf.jpeg',180,400,600,710) },
+  { name:'Banana', price:75, cat:'Keychains', bg:'yellow', ...cell(5,[.13,.78,0,.8]) },
+  { name:'Beachwear', price:250, cat:'Keychains', bg:'purple', ...cell(9,[0,1,0,1],[.13,.13],[.76,.73]) },
+];
+const REAL = { 'Super Fox':'assets/real/super-fox.png' };
+const STORIES = {
+  'Super Fox':"This is Super Fox. He wears a black mask so nobody knows he is secretly very soft. He saves lost socks at night.",
+  'Balloon':"My balloon wanted to fly away, so I put it on a keychain. Now it stays with you and still feels like floating.",
+  'Mystery Ball':"Nobody knows what is inside the Mystery Ball. Not even me. Shake it and make a wish.",
+  'Heart Cards':"I drew hearts for everyone I love. There were too many, so I made cards you can keep.",
+  'Flower':"This flower never needs water. It only needs you to smile at it once a day.",
+  'Cat':"This cat sleeps all day and dreams about fish in the sky. Please don't wake her up.",
+  'Book':"I wrote this book about a girl who could talk to clouds. The clouds told her all their secrets.",
+  'Lip':"This lip is always happy. When you are sad, it smiles for you.",
+  'Charms':"Little charms for little luck. Put one on your bag and good things will follow you.",
+  'Panda':"Panda eats bamboo for breakfast, lunch and dinner. On Fridays he eats cake.",
+  'Guitar':"My guitar plays only happy songs. If you listen very close you can hear it.",
+  'Card':"A tiny card for a tiny message. Write something nice and give it to a friend.",
+  'Snail':"Snail is slow, but she always gets there. She carries her house so she is never lost.",
+  'Butterfly & Flower':"The butterfly found the flower and they became best friends. Now they go everywhere together.",
+  'Banana':"This banana is too cute to eat. It likes to hang out and make people laugh.",
+  'Beachwear':"Summer clothes for summer days. I drew them when I was dreaming about the sea.",
+};
+var INK = '#1d1b19', SKIN = '#FFD6B5';
+const TYPE = {
+  'Super Fox':'Keychains','Balloon':'Keychains','Banana':'Keychains','Heart Cards':'Keychains','Mystery Ball':'Keychains','Snail':'Keychains',
+  'Flower':'Earrings','Charms':'Earrings','Lip':'Earrings','Butterfly & Flower':'Earrings',
+  'Cat':'Pins','Panda':'Pins','Book':'Pins','Guitar':'Pins','Card':'Pins','Beachwear':'Pins',
+};
+const HOLDER = { Keychains:'hang', Earrings:'ear', Pins:'pin' };
+const GOLD = '#E3B55B';
+const SHADE = '#F2B08C';
+const HAND_V2 = (sleeve) => `<svg viewBox="0 0 300 250" width="100%" style="display:block;overflow:visible"><g stroke="${INK}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M-90 38 C-20 30 40 32 96 40 L100 124 C40 118 -20 118 -90 126 Z" fill="${sleeve}"/><path d="M-20 46 C-10 70 -12 96 -22 118 M36 44 C44 68 44 94 38 118" fill="none" stroke-width="3" opacity=".2"/><path d="M86 34 C104 31 118 33 126 38 L128 128 C118 131 104 131 90 128 Z" fill="#fff"/><path d="M124 46 C154 40 198 44 228 64 C252 80 262 104 256 124 C252 138 240 146 226 148 L188 150 C160 146 140 136 124 124 Z" fill="${SKIN}"/><path d="M244 118 C266 122 274 148 262 162 C254 172 238 166 238 150" fill="${SHADE}"/><path d="M134 120 C162 134 194 142 224 142" fill="none" stroke="${SHADE}" stroke-width="7"/><path d="M196 68 C204 76 214 78 224 76 M170 60 C176 66 184 68 192 66" fill="none" stroke-width="3" opacity=".35"/></g><circle cx="230" cy="214" r="17" fill="none" stroke="${INK}" stroke-width="10"/><circle cx="230" cy="214" r="17" fill="none" stroke="${GOLD}" stroke-width="4.5"/><path d="M220 206 A12 12 0 0 1 236 202" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/><g stroke="${INK}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M178 128 C198 140 214 164 224 190 C228 204 216 212 208 204 C198 186 184 164 168 148 Z" fill="${SKIN}"/><path d="M210 194 C214 199 221 198 222 192" fill="#fff" stroke-width="2.5"/><path d="M224 108 C246 110 258 146 251 196 C249 209 234 211 232 199 C230 168 222 142 212 124 Z" fill="${SKIN}"/><path d="M235 194 C237 201 246 201 248 193" fill="#fff" stroke-width="2.5"/><path d="M232 150 C236 154 242 154 246 150" fill="none" stroke-width="3" opacity=".35"/></g></svg>`;
+const EAR_V2 = `<svg viewBox="0 0 240 300" width="100%" style="display:block;overflow:visible"><g stroke="${INK}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M-90 -40 H70 C96 20 72 70 84 120 C96 170 72 230 60 300 C52 380 66 520 70 700 H-90 Z" fill="#3B2A24"/><path d="M20 -30 C40 40 30 120 10 220 M50 -20 C66 50 56 130 40 250" fill="none" stroke="#6a4c40" stroke-width="4"/><path d="M80 70 C110 28 178 30 198 86 C214 134 190 170 164 190 C146 204 142 220 140 238 C138 264 120 278 100 274 C80 270 72 252 76 234 C80 214 92 198 88 176 Z" fill="${SKIN}"/><path d="M112 110 C126 98 152 106 152 130 C152 152 132 162 118 158 C106 152 104 130 112 110Z" fill="${SHADE}" stroke="none"/><path d="M104 72 C138 54 178 72 180 112 C182 142 162 158 142 172" fill="none" stroke-width="3.5"/><path d="M118 178 C130 186 134 200 126 210" fill="none" stroke-width="3.5"/><path d="M92 250 C96 262 108 266 118 262" fill="none" stroke="${SHADE}" stroke-width="6"/></g><circle cx="112" cy="256" r="4.5" fill="${INK}"/></svg>`;
+const HAND_SIDE = (sleeve) => `<svg viewBox="0 0 240 230" width="100%" style="display:block;overflow:visible"><path d="M-80 22 H92 V92 H-80Z" fill="${sleeve}" stroke="${INK}" stroke-width="5"/><path d="M-80 45 H92 M-80 68 H92" stroke="${INK}" stroke-width="2.5" opacity=".25"/><rect x="84" y="14" width="24" height="86" rx="11" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M106 26 Q176 14 204 62 Q216 92 204 126 L190 140 Q166 120 150 106 L106 90 Z" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><circle cx="184" cy="196" r="17" fill="none" stroke="${INK}" stroke-width="10"/><circle cx="184" cy="196" r="17" fill="none" stroke="${GOLD}" stroke-width="4"/><rect x="178" y="104" width="26" height="86" rx="13" transform="rotate(-6 191 147)" fill="${SKIN}" stroke="${INK}" stroke-width="5"/><path d="M186 176 q6 6 13 0" fill="#fff" stroke="${INK}" stroke-width="3"/><rect x="150" y="100" width="24" height="84" rx="12" transform="rotate(-14 162 142)" fill="${SKIN}" stroke="${INK}" stroke-width="5"/><path d="M160 170 q6 6 12 -1" fill="#fff" stroke="${INK}" stroke-width="3"/><path d="M134 50 q10 8 22 4 M150 70 q10 8 22 4" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round" opacity=".5"/><circle cx="130" cy="78" r="7" fill="#FF97AB" opacity=".55"/></svg>`;
+const EAR = `<svg viewBox="0 0 220 280" width="100%" style="display:block;overflow:visible"><path d="M-60 -40 H40 Q70 40 44 110 Q20 170 50 240 Q60 290 -60 300Z" fill="#3a2a22" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M60 40 Q150 -6 186 80 Q206 150 156 190 Q128 212 126 240 Q122 268 96 266 Q64 264 66 232 Q68 204 96 184 Q134 156 126 110 Q116 70 72 78 Q50 70 60 40Z" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M90 60 Q156 48 162 112 Q164 150 126 170" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M108 96 Q138 100 134 130" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round" opacity=".6"/><circle cx="98" cy="250" r="4" fill="${INK}"/><circle cx="150" cy="70" r="8" fill="#FF97AB" opacity=".45"/></svg>`;
+const HOOK = `<svg viewBox="0 0 24 50" width="100%" style="display:block;overflow:visible"><path d="M12 0 Q-2 12 12 22 V50" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M12 0 Q-2 12 12 22 V50" fill="none" stroke="${GOLD}" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="48" r="5" fill="${GOLD}" stroke="${INK}" stroke-width="3"/></svg>`;
+const BAG = `<svg viewBox="0 0 340 420" width="100%" style="display:block;overflow:visible"><path d="M96 70 Q96 0 170 0 Q244 0 244 70" fill="none" stroke="${INK}" stroke-width="22" stroke-linecap="round"/><path d="M96 70 Q96 0 170 0 Q244 0 244 70" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/><rect x="14" y="60" width="312" height="400" rx="70" fill="#7FB8FF" stroke="${INK}" stroke-width="5"/><rect x="30" y="76" width="280" height="370" rx="56" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="10 9" opacity=".35"/><path d="M60 330 H280 V420 H60Z" fill="#f3eee6" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M60 330 Q170 370 280 330" fill="none" stroke="${INK}" stroke-width="4"/></svg>`;
+
+const HAND_TOP = (sleeve) => `<svg viewBox="0 0 200 200" width="100%" style="display:block;overflow:visible"><path d="M58 -40 H142 V60 H58Z" fill="${sleeve}" stroke="${INK}" stroke-width="5"/><path d="M76 -40 V58 M100 -40 V58 M124 -40 V58" stroke="${INK}" stroke-width="2.5" opacity=".25"/><rect x="52" y="52" width="96" height="22" rx="10" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M58 74 Q52 132 84 142 L120 142 Q150 132 144 74 Z" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M74 116 q9 12 18 0 M92 120 q9 12 18 0 M110 116 q9 12 18 0" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><circle cx="100" cy="172" r="17" fill="none" stroke="${INK}" stroke-width="10"/><circle cx="100" cy="172" r="17" fill="none" stroke="#DADDE0" stroke-width="4"/><path d="M84 138 Q84 166 100 168 Q116 166 116 138" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><circle cx="72" cy="96" r="7" fill="#FF97AB" opacity=".6"/></svg>`;
+const CHAIN = `<svg viewBox="0 0 30 64" width="100%" style="display:block;overflow:visible"><g fill="none" stroke-linecap="round"><ellipse cx="15" cy="10" rx="6" ry="10" stroke="${INK}" stroke-width="7"/><ellipse cx="15" cy="10" rx="6" ry="10" stroke="#DADDE0" stroke-width="3"/><ellipse cx="15" cy="30" rx="3" ry="10" stroke="${INK}" stroke-width="7"/><ellipse cx="15" cy="30" rx="3" ry="10" stroke="#DADDE0" stroke-width="3"/><ellipse cx="15" cy="50" rx="6" ry="10" stroke="${INK}" stroke-width="7"/><ellipse cx="15" cy="50" rx="6" ry="10" stroke="#DADDE0" stroke-width="3"/></g></svg>`;
+const PALM = (sleeve) => `<svg viewBox="0 0 280 170" width="100%" style="display:block;overflow:visible"><path d="M100 104 H176 V240 H100Z" fill="${sleeve}" stroke="${INK}" stroke-width="5"/><path d="M119 104 V240 M138 104 V240 M157 104 V240" stroke="${INK}" stroke-width="2.5" opacity=".25"/><rect x="94" y="94" width="88" height="22" rx="10" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M34 58 Q28 40 48 40 L78 44 Q140 34 200 40 L238 38 Q258 40 252 58 Q240 96 186 100 L92 100 Q42 94 34 58Z" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M48 40 Q34 16 52 10 Q68 8 72 44" fill="${SKIN}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M214 42 q7 9 1 18 M190 40 q7 9 1 18 M166 40 q7 9 1 18" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="74" r="8" fill="#FF97AB" opacity=".55"/></svg>`;
+PRODUCTS.forEach(p => { p.cat = TYPE[p.name]; });
+const CATS = ['All','Keychains','Earrings','Pins'];
+const CAT_COLOR = { All:'#1d1b19', Keychains:COLORS.yellow, Earrings:COLORS.pink, Pins:COLORS.mint };
+
+const DRIP = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 220" preserveAspectRatio="none"><path fill="#000" d="M0 0H100V100C96 100 95 106 93 112C92 116 88 116 87 112C85 104 80 102 74 103C70 104 69 108 67 110C65 112 62 111 61 108C59 103 52 101 46 103C42 104 41 114 38 116C35 118 32 115 31 111C30 105 24 101 18 103C14 104 13 108 11 109C8 110 6 106 5 104C4 102 2 101 0 101Z"/></svg>')}")`;
+
+class Component extends DCLogic {
+  state = { cat:'All', hover:null, bag:0, bump:0, open:null, playing:false, progress:0, added:false };
+
+  componentDidMount() {
+    this._key = (e) => { if (e.key === 'Escape') this.close(); };
+    this._st = (e) => { if (!e.key || e.key === 'delishop-products' || e.key === 'delishop-hidden') this.loadCustom(); };
+    window.addEventListener('keydown', this._key);
+    window.addEventListener('storage', this._st);
+    this.loadCustom();
+    this.setState({ bag: this.readBag().reduce((n, b) => n + b.qty, 0) });
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._key); window.removeEventListener('storage', this._st); this.stopVoice(); }
+
+  loadCustom() {
+    let raw = [];
+    try { raw = JSON.parse(localStorage.getItem('delishop-products') || '[]'); } catch (e) {}
+    const custom = raw.slice().reverse().map(c => {
+      if (c.photo) REAL[c.name] = c.photo;
+      STORIES[c.name] = c.story || '';
+      return { name: c.name, price: c.price, cat: c.cat, bg: c.bg, src: c.drawing, iw: c.dw, ih: c.dh, x: 0, y: 0, w: c.dw, h: c.dh, clip: 'none', photo: false, voice: c.voice || null };
+    });
+    let hidden = [];
+    try { hidden = JSON.parse(localStorage.getItem('delishop-hidden') || '[]'); } catch (e) {}
+    this.setState({ custom, hidden });
+  }
+
+  stopVoice() {
+    if (this._audio) { this._audio.pause(); this._audio = null; }
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    clearInterval(this._tick);
+  }
+  close() { this.stopVoice(); this.setState({ open:null, playing:false, progress:0, added:false }); }
+  openItem(p) { this.stopVoice(); this.setState({ open:p.name, playing:false, progress:0, added:false, hover:null }); }
+
+  play(p) {
+    if (this.state.playing) { this.stopVoice(); this.setState({ playing:false }); return; }
+    this.stopVoice();
+    const text = STORIES[p.name];
+    const done = () => { clearInterval(this._tick); this.setState({ playing:false, progress:1 }); };
+    if (p.voice) {
+      const a = new Audio(p.voice); this._audio = a;
+      a.ontimeupdate = () => this.setState({ progress: a.currentTime / (a.duration || 1) });
+      a.onended = done; a.play();
+    } else if (window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.92; u.pitch = 1.45;
+      const est = text.length * 65; const t0 = Date.now();
+      u.onboundary = (e) => this.setState({ progress: Math.max(this.state.progress, e.charIndex / text.length) });
+      this._tick = setInterval(() => this.setState(s => ({ progress: Math.max(s.progress, Math.min(.97, (Date.now() - t0) / est)) })), 250);
+      u.onend = done;
+      speechSynthesis.speak(u);
+    }
+    this.setState({ playing:true, progress:0 });
+  }
+
+  art(p, size) {
+    const h = React.createElement;
+    if (REAL[p.name]) return h('img', { src: REAL[p.name], alt: p.name, style: { width: size, display:'block', filter:'drop-shadow(5px 7px 0 rgba(29,27,25,.28))' } });
+    const ar = p.w / p.h;
+    const W = ar >= 0.8 ? size : size * 1.25 * ar;
+    return h('div', { style: { position:'relative', overflow:'hidden', width: W, aspectRatio: String(ar), borderRadius: 18 } },
+      h('img', { src: p.src, alt: p.name, style: { position:'absolute', maxWidth:'none', display:'block', width: (p.iw / p.w * 100) + '%', left: (-p.x / p.w * 100) + '%', top: (-p.y / p.h * 100) + '%', clipPath: p.clip, mixBlendMode:'multiply', filter: p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.3) brightness(1.08)' } }));
+  }
+
+  stage(p) {
+    const h = React.createElement;
+    const kind = HOLDER[p.cat] || 'hang';
+    const svg = (html, style) => h('div', { style, dangerouslySetInnerHTML: { __html: html } });
+    if (kind === 'hang') {
+      // hand enters from the left; ring centre at (184,196)/240 of a 260px-wide svg
+      const HW = 320, s = HW / 471, ox = -18 * s, rx = ox + 231 * s, ry = 240 * s;
+      return h('div', { key: p.name, style: { position:'absolute', left: 0, top: 20, width: 260, height: 520, animation:'handSide .8s cubic-bezier(.3,1.3,.5,1) both' } },
+        h('div', { style: { position:'absolute', left: rx - 110, width: 220, top: ry - 10, transformOrigin:'50% 0', animation:'swing 2.8s ease-in-out infinite', display:'flex', flexDirection:'column', alignItems:'center' } },
+          svg(CHAIN, { width: 26 }),
+          h('div', { style: { marginTop: REAL[p.name] ? -24 : -4 } }, this.art(p, 220))),
+        h('img', { src:'assets/hand.png', alt:'', style: { position:'absolute', left: ox, top: 0, width: HW, display:'block', zIndex: 2, pointerEvents:'none' } }));
+    }
+    if (kind === 'ear') {
+      const s = 230 / 240, hx = 112 * s, hy = 256 * s;
+      return h('div', { key: p.name, style: { position:'absolute', left: 0, top: 0, width: 230, height: 560, animation:'handSide .8s cubic-bezier(.3,1.3,.5,1) both' } },
+        svg(EAR_V2, { position:'absolute', left: 0, top: 0, width: 230 }),
+        h('div', { style: { position:'absolute', left: hx - 75, width: 150, top: hy - 4, transformOrigin:'50% 0', animation:'dangle 1.9s ease-in-out infinite', display:'flex', flexDirection:'column', alignItems:'center', zIndex: 2 } },
+          svg(HOOK, { width: 20 }),
+          h('div', { style: { marginTop: -6 } }, this.art(p, 150))));
+    }
+    const badge = REAL[p.name] ? this.art(p, 210) :
+      h('div', { style: { position:'relative', width: 210, height: 210, borderRadius:'50%', border:`6px solid ${INK}`, background:'#fff', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 0 rgba(29,27,25,.25), inset 0 0 0 8px #f3eee6' } },
+        this.art(p, 150),
+        h('div', { style: { position:'absolute', top:'-20%', bottom:'-20%', width:'35%', background:'linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent)', animation:'shine 3.2s ease-in-out infinite' } }));
+    return h('div', { key: p.name, style: { position:'absolute', inset: 0, animation:'fadeIn .4s both' } },
+      svg(BAG, { position:'absolute', left:'50%', bottom: -120, width: 340, marginLeft: -170, animation:'palmIn .7s cubic-bezier(.3,1.3,.5,1) both' }),
+      h('div', { style: { position:'absolute', left:'50%', top: 170, marginLeft: -105, animation:'pinDrop .9s .45s cubic-bezier(.3,1.2,.5,1) both' } },
+        h('div', { style: { animation:'tilt 3s 1.4s ease-in-out infinite' } }, badge)));
+  }
+
+  readBag() { try { return JSON.parse(localStorage.getItem('delishop-bag') || '[]'); } catch (e) { return []; } }
+  addToBag(p) {
+    const bag = this.readBag();
+    const hit = bag.find(b => b.name === p.name);
+    if (hit) hit.qty += 1;
+    else bag.push({ name: p.name, price: p.price, bg: p.bg, src: p.src, iw: p.iw, ih: p.ih, x: p.x, y: p.y, w: p.w, h: p.h, clip: p.clip, real: REAL[p.name] || null, qty: 1 });
+    try { localStorage.setItem('delishop-bag', JSON.stringify(bag)); } catch (e) {}
+    this.setState(s => ({ bag: bag.reduce((n, b) => n + b.qty, 0), bump: s.bump + 1 }));
+  }
+  add(e, p) {
+    e.stopPropagation();
+    this.addToBag(p);
+  }
+
+  renderVals() {
+    const { cat, hover, bag, bump } = this.state;
+    const always = this.props.alwaysColor ?? false;
+    const dur = this.props.dripSeconds ?? 0.9;
+    const hidden = this.state.hidden || [];
+    const ALL = PRODUCTS.concat(this.state.custom || []).filter(p => !hidden.includes(p.name));
+    const list = ALL.filter(p => cat === 'All' || p.cat === cat);
+    const items = list.map((p, i) => {
+      const on = hover === p.name;
+      const colored = always || on;
+      const ar = p.w / p.h;
+      return {
+        num: i + 1,
+        name: p.name,
+        price: p.price + 't',
+        src: p.src,
+        bg: 'assets/bg/' + p.bg + '.png',
+        ar: ar.toFixed(4),
+        winW: `min(100cqw, calc(100cqh * ${ar.toFixed(4)}))`,
+        imgW: (p.iw / p.w * 100).toFixed(3) + '%',
+        imgL: (-p.x / p.w * 100).toFixed(3) + '%',
+        imgT: (-p.y / p.h * 100).toFixed(3) + '%',
+        clip: p.clip,
+        imgFilter: p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.25) brightness(1.08)',
+        maskPos: colored ? '0 0%' : '0 100%',
+        tilt: on ? 'rotate(0deg) translateY(-6px)' : `rotate(${[-1.2,0.8,-0.5,1.1,-0.9,0.6][i % 6]}deg)`,
+        shadow: on ? '6px 8px 0 #1d1b19' : '3px 4px 0 #1d1b19',
+        btnOpacity: on ? 1 : 0,
+        btnScale: on ? 'scale(1)' : 'scale(.6)',
+        onEnter: () => this.setState({ hover: p.name }),
+        onLeave: () => this.setState({ hover: null }),
+        onToggle: () => this.openItem(p),
+        onAdd: (e) => this.add(e, p),
+      };
+    });
+    const tabs = CATS.map((c, i) => {
+      const active = c === cat;
+      return {
+        label: c,
+        bg: active ? (c === 'All' ? '#1d1b19' : CAT_COLOR[c]) : '#fff',
+        shadow: active ? '1px 1px 0 #1d1b19' : '3px 3px 0 #1d1b19',
+        tilt: active ? `rotate(${i % 2 ? 1.5 : -1.5}deg)` : 'none',
+        onClick: () => this.setState({ cat: c, hover: null }),
+        color: active && c === 'All' ? '#fff' : '#1d1b19',
+      };
+    });
+    const op = ALL.find(p => p.name === this.state.open);
+    const h = React.createElement;
+    const { playing, progress, added } = this.state;
+    const m = op ? {
+      name: op.name, price: op.price + 't', story: STORIES[op.name],
+      num: ALL.indexOf(op) + 1,
+      bg: 'assets/bg/' + op.bg + '.png', color: COLORS[op.bg], accent: COLORS[op.bg],
+      stage: this.stage(op),
+    } : {};
+    return {
+      modalOpen: !!op, m,
+      closeModal: () => this.close(),
+      stop: (e) => e.stopPropagation(),
+      togglePlay: () => op && this.play(op),
+      playIcon: playing ? '❚❚' : '▶',
+      playPad: playing ? '0' : '4px',
+      playLabel: playing ? 'Listening…' : progress >= 1 ? 'Play again' : 'Listen to the story',
+      progressPct: Math.round(progress * 100) + '%',
+      eqBars: h('div', { style: { display:'flex', gap: 4, alignItems:'center', height: 30, width: 34 } },
+        [0, .2, .4, .1, .3].map((d, i) => h('span', { key: i, style: { width: 4, height: '100%', borderRadius: 3, background: INK, transformOrigin:'50% 50%', transform:'scaleY(.35)', animation: playing ? `eq .7s ease-in-out ${d}s infinite` : 'none' } }))),
+      addLabel: added ? 'Added ✓' : 'Add to bag',
+      addFromModal: () => { if (op) { this.addToBag(op); this.setState({ added: true }); } },
+      items, tabs,
+      dripMask: DRIP,
+      maskTransition: `-webkit-mask-position ${dur}s cubic-bezier(.45,.05,.35,1), mask-position ${dur}s cubic-bezier(.45,.05,.35,1)`,
+      bagCount: bag,
+      bagBadgeStyle: {
+        minWidth: 34, height: 34, borderRadius: 999, background: bag ? '#FF97AB' : '#f1ece4',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, padding: '0 8px',
+        boxSizing: 'border-box', border: '2px solid #1d1b19',
+        animation: bump ? `pop .4s ease ${bump % 2 ? '' : ' '}` : 'none',
+      },
+      openBag: () => { window.location.href = 'DeliShop%20Checkout.dc.html'; },
+    };
+  }
+}
+</script>
+</body>
+</html>
