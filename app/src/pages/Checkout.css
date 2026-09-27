@@ -1,0 +1,142 @@
+.co { max-width: 1120px; padding: 36px 28px 72px; gap: 34px; }
+.co-row { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.co-muted { font-size: 21px; color: var(--muted); }
+
+.co-invoice {
+  flex: 1 1 360px;
+  max-width: 460px;
+  min-width: 0;
+  margin: 0 auto;
+  position: relative;
+  transform: rotate(-1.2deg);
+  filter: drop-shadow(2.5px 0 0 var(--ink)) drop-shadow(-2.5px 0 0 var(--ink)) drop-shadow(0 2.5px 0 var(--ink)) drop-shadow(0 -2.5px 0 var(--ink)) drop-shadow(6px 8px 0 var(--ink));
+}
+.co-scallop {
+  height: 14px;
+  background: radial-gradient(circle at 11px 0, transparent 9px, #fff 10px);
+  background-size: 22px 14px;
+  background-repeat: repeat-x;
+}
+.co-paper { background: #fff; padding: 18px 30px 26px; display: flex; flex-direction: column; gap: 18px; }
+.co-rule { height: 0; border-top: 3px dashed var(--ink); opacity: .3; }
+.co-thumb {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  border: 2px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.co-line-name { font-size: 24px; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-qty {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.co-qty:disabled { cursor: default; opacity: .4; }
+.co-total { position: relative; font-weight: 800; font-size: 44px; line-height: 1; padding: 0 6px; }
+.co-highlight {
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  bottom: 2px;
+  height: 20px;
+  background: var(--yellow);
+  border-radius: 10px 4px 12px 6px;
+  transform: rotate(-2deg);
+}
+.co-stamp {
+  position: absolute;
+  right: 22px;
+  top: 120px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 4px solid var(--red);
+  color: var(--red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.05;
+  animation: stampIn .6s cubic-bezier(.3, 1.3, .5, 1) both;
+  background: rgba(255, 255, 255, .6);
+  box-shadow: inset 0 0 0 5px #fff, inset 0 0 0 7px var(--red);
+}
+.co-stamp > span { font-size: 17px; font-weight: 400; }
+
+.co-form { gap: 28px; }
+.co-step { display: flex; flex-direction: column; gap: 14px; }
+.co-step-head { display: flex; align-items: center; gap: 12px; font-size: 24px; }
+.co-step-num {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2.5px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.co-label { display: flex; flex-direction: column; gap: 6px; font-size: 17px; }
+.co-input { height: 52px; border-radius: 16px; padding: 0 16px; font-size: 20px; min-width: 0; }
+.co-card {
+  position: relative;
+  border: 2.5px solid var(--ink);
+  border-radius: 22px;
+  background: var(--mint);
+  padding: 22px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 var(--ink);
+  container-type: inline-size;
+}
+.co-dot { position: absolute; border-radius: 50%; border: 2.5px solid var(--ink); }
+.co-chip { width: 46px; height: 34px; border-radius: 8px; border: 2.5px solid var(--ink); background: var(--yellow); position: relative; }
+.co-card-number {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-size: clamp(18px, 8cqw, 32px);
+  letter-spacing: 1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.co-copy {
+  height: 40px;
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+.co-submit { height: 62px; font-size: 23px; box-shadow: 4px 4px 0 var(--pink); }
+.co-thanks {
+  flex: 999 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+  background: var(--green);
+  border: 2.5px solid var(--ink);
+  border-radius: 30px;
+  padding: 36px;
+  box-shadow: 5px 6px 0 var(--ink);
+}
