@@ -14,8 +14,20 @@ npm run build
 | ------------------ | ----------------------------------- | ----------------------------- |
 | `/`                | Shop: drip-to-colour cards + popup  | `DeliShop Products.dc.html`   |
 | `/checkout`        | Invoice, payment card, receipt      | `DeliShop Checkout.dc.html`   |
+| `/studio/login`    | Studio login                        | –                             |
 | `/studio`          | Add a new product                   | `DeliShop Admin.dc.html`      |
 | `/studio/products` | All products, delete with a warning | `DeliShop Inventory.dc.html`  |
+
+## Studio login
+
+`/studio` and `/studio/products` need a login; after logging in you land on `/studio/products`
+(or the studio page you were heading to). The username and a SHA-256 of the password are in
+`src/lib/auth.ts` (default `admin` / `delishop`); the comment there shows how to set a new
+password. The login lasts until the tab is closed.
+
+With no backend the check runs in the browser, so it only keeps casual visitors out: anyone who
+reads the bundled code can get past it. Move it to a server before the studio guards anything
+that matters.
 
 ## Data
 

@@ -91,6 +91,7 @@ a.logo:hover { color: var(--ink); }
   text-decoration: none;
   box-shadow: 3px 3px 0 var(--ink);
 }
+button.pill { cursor: pointer; }
 .studio-badge {
   height: 34px;
   padding: 0 14px;
