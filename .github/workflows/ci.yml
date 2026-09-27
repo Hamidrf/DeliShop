@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: delishop
+          POSTGRES_PASSWORD: delishop
+          POSTGRES_DB: delishop_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            app/package-lock.json
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Install app dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Typecheck server
+        working-directory: server
+        run: npm run typecheck
+
+      - name: Lint server
+        working-directory: server
+        run: npm run lint
+
+      - name: Test server
+        working-directory: server
+        run: npm test
+        env:
+          DATABASE_URL: postgres://delishop:delishop@localhost:5432/delishop_test
+
+      - name: Build server
+        working-directory: server
+        run: npm run build
+
+      - name: Typecheck & build app
+        working-directory: app
+        run: npm run build
+
+      - name: Lint app
+        working-directory: app
+        run: npm run lint
+
+      - name: Audit dependencies
+        working-directory: server
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            app/package-lock.json
+
+      - name: Install & build app
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install & build server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run migrations
+        working-directory: server
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Requires the LIARA_API_TOKEN secret (see docs/backend-architecture.md
+      # §6). Until it's added, this step is expected to fail — everything
+      # above it (typecheck/lint/test/build) still gates every push and PR.
+      - name: Deploy to Liara
+        uses: liara-cloud/liara-cli-action@v2
+        with:
+          api-token: ${{ secrets.LIARA_API_TOKEN }}
