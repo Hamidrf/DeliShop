@@ -17,6 +17,13 @@ const DRIP = `url("data:image/svg+xml,${encodeURIComponent(DRIP_SVG)}")`;
 const TILTS = [-1.2, 0.8, -0.5, 1.1, -0.9, 0.6];
 
 function CardArt({ p }: { p: Product }) {
+  if (p.real) {
+    return (
+      <div className="card-art">
+        <img src={p.real} alt="" className="card-art-img" style={{ width: '85%', display: 'block' }} />
+      </div>
+    );
+  }
   const ar = p.w / p.h;
   return (
     <div className="card-art">
