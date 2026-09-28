@@ -147,6 +147,12 @@ function ds_process_image_imagick(string $bytes, int $maxSide, int $quality, boo
         $canvas->compositeImage($img, Imagick::COMPOSITE_OVER, 0, 0);
         $img->clear();
         $img = $canvas;
+    } else {
+        // Without this, some ImageMagick/libwebp builds silently drop the
+        // alpha channel on WebP output even though it was never flattened --
+        // confirmed on the production host (uploaded transparent PNGs came
+        // back as fully opaque WebP).
+        $img->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
     }
 
     $img->stripImage();
