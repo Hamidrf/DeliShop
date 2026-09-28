@@ -97,5 +97,14 @@ function ds_self_deploy(): array
     $copied = ds_recursive_copy($sourceRoot, $destRoot);
     ds_recursive_delete($extractDir);
 
-    return ['files_copied' => $copied, 'dest' => $destRoot];
+    // Some hosts run opcache with validate_timestamps off (or a slow
+    // revalidate interval), so an updated PHP file on disk doesn't take
+    // effect until the cached bytecode for it is explicitly dropped.
+    // Confirmed necessary on this host: identical input processed
+    // identically by lib/uploads.php across multiple deploys that changed
+    // that exact code path. Included in the response so a deploy's logs
+    // show whether this ran.
+    $opcacheReset = function_exists('opcache_reset') ? opcache_reset() : null;
+
+    return ['files_copied' => $copied, 'dest' => $destRoot, 'opcache_reset' => $opcacheReset];
 }
