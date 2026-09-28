@@ -17,13 +17,6 @@ const DRIP = `url("data:image/svg+xml,${encodeURIComponent(DRIP_SVG)}")`;
 const TILTS = [-1.2, 0.8, -0.5, 1.1, -0.9, 0.6];
 
 function CardArt({ p }: { p: Product }) {
-  if (p.real) {
-    return (
-      <div className="card-art">
-        <img src={p.real} alt="" className="card-art-img" style={{ width: '85%', display: 'block' }} />
-      </div>
-    );
-  }
   const ar = p.w / p.h;
   return (
     <div className="card-art">
@@ -34,7 +27,6 @@ function CardArt({ p }: { p: Product }) {
           className="card-art-img"
           style={{
             ...cropStyle(p),
-            mixBlendMode: 'multiply',
             filter: `grayscale(var(--art-gray, 1)) ${p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.25) brightness(1.08)'}`,
           }}
         />
