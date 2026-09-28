@@ -173,6 +173,7 @@ button.pill { cursor: pointer; }
   transform: rotate(var(--tilt));
   box-shadow: 3px 4px 0 var(--ink);
   transition: transform .35s cubic-bezier(.3, 1.6, .5, 1), box-shadow .35s;
+  --art-gray: 1;
 }
 .card-layer {
   position: absolute;
@@ -201,6 +202,9 @@ button.pill { cursor: pointer; }
   align-items: center;
   justify-content: center;
 }
+/* the drawing sits above both paper layers, unmasked, and just fades between the
+   grey "sketch" look and its own colour in step with the paper's drip reveal */
+.card-art-img { transition: filter var(--drip, .9s) ease; }
 .card-num {
   position: absolute;
   top: 14px;
@@ -245,4 +249,5 @@ button.pill { cursor: pointer; }
 .card-add:hover { background: var(--ink); color: #fff; }
 .card:hover { transform: rotate(0deg) translateY(-6px); box-shadow: 6px 8px 0 var(--ink); }
 .card:hover .card-color, .card.always .card-color { -webkit-mask-position: 0 0%; mask-position: 0 0%; }
+.card:hover, .card.always { --art-gray: 0; }
 .card:hover .card-add, .card-add:focus-visible { opacity: 1; transform: scale(1); }
