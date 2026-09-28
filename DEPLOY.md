@@ -41,7 +41,7 @@ whatever protocol/IPs that tool uses). PHP's `curl`, however, *can* reach
 So deploys are fully automated a different way: right after the GitHub
 Action pushes the `deploy` branch, it calls
 `POST https://deliarte.ir/api/setup/self-deploy` with a secret token. That
-route (`server-php/lib/self_deploy.php`) downloads the `deploy` branch as a
+route (`server-php/lib/self_deploy.php`) downloads that exact commit as a
 zip straight from `codeload.github.com` and copies it over `public_html`,
 overwriting matching files. It never deletes anything, so
 `public_html/uploads/media` (not part of the deploy artifact) is always
@@ -51,6 +51,21 @@ left alone.
 step on this host.** The old cPanel Git repository (if still listed under
 Git™ Version Control) is no longer used for anything and can be ignored or
 deleted.
+
+**Why by commit SHA, not by branch name:** self-deploy used to fetch
+`codeload.github.com/.../zip/refs/heads/deploy` (the branch ref). The
+`deploy` branch is force-pushed as a brand-new commit on every single
+deploy, but self-deploy is called within seconds of that push, and
+GitHub's codeload CDN caches branch-ref zip downloads for a few minutes —
+so the "fresh" zip fetched right after a push could silently still be the
+**previous** deploy's content. Confirmed the hard way: several code
+changes appeared to have zero effect on the live site, including after
+restarting PHP on the host, until this was traced to the zip download
+itself being stale rather than anything on the PHP side. The CI workflow
+now captures the deploy branch's just-pushed commit SHA and sends it to
+self-deploy, which fetches `codeload.github.com/.../zip/<sha>` instead —
+content-addressed and immutable, so even a cached response for it is
+guaranteed correct.
 
 ### Secrets involved
 
