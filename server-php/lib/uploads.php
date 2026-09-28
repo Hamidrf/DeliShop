@@ -147,12 +147,6 @@ function ds_process_image_imagick(string $bytes, int $maxSide, int $quality, boo
         $canvas->compositeImage($img, Imagick::COMPOSITE_OVER, 0, 0);
         $img->clear();
         $img = $canvas;
-    } else {
-        // Without this, some ImageMagick/libwebp builds silently drop the
-        // alpha channel on WebP output even though it was never flattened --
-        // confirmed on the production host (uploaded transparent PNGs came
-        // back as fully opaque WebP).
-        $img->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
     }
 
     $img->stripImage();
@@ -218,10 +212,21 @@ function ds_process_image_gd(string $bytes, int $maxSide, int $quality, bool $fl
     return ['buffer' => $blob, 'width' => $newW, 'height' => $newH];
 }
 
-/** Kid's drawing -> WebP, transparency preserved, longest side capped at 1200px. */
+/**
+ * Kid's drawing -> WebP, transparency preserved, longest side capped at 1200px.
+ * Forced through the GD path (not the extension_loaded('imagick') dispatch
+ * in ds_process_image()): the Imagick path on the production host has
+ * proven unreliable at preserving alpha on WebP output here -- first it
+ * silently dropped it entirely, then explicitly activating the alpha
+ * channel made the whole image transparent instead. GD's non-flatten
+ * branch has been verified correct (transparent pixels stay transparent,
+ * opaque pixels stay opaque). Trade-off: no HEIC support for drawings
+ * (GD can't read it) -- acceptable since HEIC input for this route isn't
+ * the common case (see ds_process_image()'s docblock).
+ */
 function ds_process_drawing(string $bytes): array
 {
-    return ds_process_image($bytes, 1200, 86, false);
+    return ds_process_image_gd($bytes, 1200, 86, false);
 }
 
 /** Product photo -> WebP, transparency preserved, longest side capped at 1000px. */
