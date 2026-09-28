@@ -2,7 +2,7 @@ import { useCallback, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../../components/Logo';
 import { cropStyle, type Product } from '../../lib/products';
-import { KEYS, addToBag, useCatalog, useStored, type BagItem } from '../../lib/store';
+import { KEYS, addToBag, useCatalog, useStored, type BagEntry } from '../../lib/store';
 import { CAT_COLOR, FILTERS, INK, bgImage, type CategoryFilter } from '../../lib/theme';
 import { ProductModal } from './ProductModal';
 import './Shop.css';
@@ -34,7 +34,7 @@ function CardArt({ p }: { p: Product }) {
 export default function Shop() {
   const navigate = useNavigate();
   const all = useCatalog('shop');
-  const bag = useStored<BagItem>(KEYS.bag);
+  const bag = useStored<BagEntry>(KEYS.bag);
   const bagCount = bag.reduce((n, b) => n + b.qty, 0);
   const [bump, setBump] = useState(0);
   const [cat, setCat] = useState<CategoryFilter>('All');

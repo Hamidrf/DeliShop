@@ -20,14 +20,14 @@ export default function Inventory() {
   }, [pending]);
 
   const confirm = () => {
-    if (pending) deleteProduct(pending);
+    if (pending) void deleteProduct(pending).catch(() => {});
     setPending(null);
   };
 
   return (
     <div className="page">
       <div className="page-inner inv">
-        <StudioHeader links={[{ to: '/studio', label: '+ New product' }, { to: '/', label: 'View shop →' }]} />
+        <StudioHeader links={[{ to: '/studio', label: '+ New product' }, { to: '/studio/orders', label: 'Orders' }, { to: '/', label: 'View shop →' }]} />
 
         <div className="inv-bar">
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>

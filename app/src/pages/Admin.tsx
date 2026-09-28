@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import { StudioHeader } from '../components/StudioHeader';
-import { fromStored, type StoredProduct } from '../lib/products';
-import { KEYS, deleteProduct, useCatalog, useStored, write } from '../lib/store';
+import { ApiError, api } from '../lib/api';
+import { queryClient } from '../lib/queryClient';
+import { useCatalog } from '../lib/store';
 import { CATEGORIES, CAT_COLOR, COLORS, INK, bgImage, colorOf, type BgKey, type Category } from '../lib/theme';
 import './Admin.css';
 
-interface Img { url: string; w: number; h: number }
+interface Img { blob: Blob; url: string; w: number; h: number }
 
-/** Loads an image file, shrinks it to fit `max` px and re-encodes it as a data URL. */
+/** Loads an image file, shrinks it to fit `max` px and re-encodes it as a Blob. */
 function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') {
   return new Promise<Img>((res, rej) => {
     const r = new FileReader();
@@ -22,7 +23,10 @@ function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') 
         // flatten onto white so the drawing's paper multiplies away cleanly
         if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
         ctx.drawImage(img, 0, 0, w, h);
-        res({ url: c.toDataURL(type, 0.86), w, h });
+        c.toBlob(blob => {
+          if (!blob) { rej(new Error('Could not read that image.')); return; }
+          res({ blob, url: URL.createObjectURL(blob), w, h });
+        }, type, 0.86);
       };
       img.onerror = rej;
       img.src = r.result as string;
@@ -32,14 +36,7 @@ function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') 
   });
 }
 
-const blobToUrl = (blob: Blob) => new Promise<string>(res => {
-  const r = new FileReader();
-  r.onload = () => res(r.result as string);
-  r.readAsDataURL(blob);
-});
-
 export default function Admin() {
-  const list = useStored<StoredProduct>(KEYS.products);
   const shopCount = useCatalog('shop').length;
 
   const [name, setName] = useState('');
@@ -49,8 +46,9 @@ export default function Admin() {
   const [photo, setPhoto] = useState<Img | null>(null);
   const [price, setPrice] = useState('');
   const [story, setStory] = useState('');
-  const [voice, setVoice] = useState<string | null>(null);
+  const [voice, setVoice] = useState<{ blob: Blob; url: string } | null>(null);
   const [msg, setMsg] = useState<{ text: string; ok: boolean }>({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
 
   const [recording, setRecording] = useState(false);
   const [secs, setSecs] = useState(0);
@@ -71,7 +69,7 @@ export default function Admin() {
 
   const pickDrawing = async (f?: File) => { if (f) { setDrawing(await fileToImage(f, 1000, 'image/jpeg')); setMsg({ text: '', ok: true }); } };
   const pickPhoto = async (f?: File) => { if (f) { setPhoto(await fileToImage(f, 800, 'image/png')); setMsg({ text: '', ok: true }); } };
-  const pickVoice = async (f?: File) => { if (f) { setVoice(await blobToUrl(f)); setMsg({ text: '', ok: true }); } };
+  const pickVoice = (f?: File) => { if (f) { setVoice({ blob: f, url: URL.createObjectURL(f) }); setMsg({ text: '', ok: true }); } };
 
   const toggleRecord = async () => {
     if (recording) { stopRec(); return; }
@@ -80,9 +78,10 @@ export default function Admin() {
       const rec = new MediaRecorder(stream);
       const chunks: Blob[] = [];
       rec.ondataavailable = e => chunks.push(e.data);
-      rec.onstop = async () => {
+      rec.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
-        setVoice(await blobToUrl(new Blob(chunks, { type: rec.mimeType })));
+        const blob = new Blob(chunks, { type: rec.mimeType });
+        setVoice({ blob, url: URL.createObjectURL(blob) });
       };
       rec.start();
       recorder.current = rec;
@@ -94,20 +93,33 @@ export default function Admin() {
     }
   };
 
-  const save = (e: FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault();
     const missing = [!name.trim() && 'name', !drawing && 'drawing', !(Number(price) > 0) && 'price'].filter(Boolean);
     if (missing.length || !drawing) { setMsg({ text: 'Missing: ' + missing.join(', '), ok: false }); return; }
-    const item: StoredProduct = {
-      id: Date.now(), name: name.trim(), cat, bg, price: Number(price), story: story.trim(),
-      drawing: drawing.url, dw: drawing.w, dh: drawing.h, photo: photo ? photo.url : null, voice,
-    };
-    if (!write(KEYS.products, [item, ...list])) {
-      setMsg({ text: 'Too big to save. Try a shorter voice or smaller images.', ok: false });
-      return;
+
+    const form = new FormData();
+    form.set('name', name.trim());
+    form.set('category', cat);
+    form.set('color', bg);
+    form.set('price', price);
+    form.set('story', story.trim());
+    form.set('drawing', drawing.blob, 'drawing.jpg');
+    if (photo) form.set('photo', photo.blob, 'photo.png');
+    if (voice) form.set('voice', voice.blob, 'voice.webm');
+
+    setSaving(true);
+    try {
+      const { product } = await api.postForm<{ product: { name: string } }>('/studio/products', form);
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await queryClient.invalidateQueries({ queryKey: ['studio', 'products'] });
+      setName(''); setCat('Keychains'); setBg('pink'); setDrawing(null); setPhoto(null); setPrice(''); setStory(''); setVoice(null);
+      setMsg({ text: product.name + ' is in the shop!', ok: true });
+    } catch (err) {
+      setMsg({ text: err instanceof ApiError ? err.message : 'Could not save. Try again.', ok: false });
+    } finally {
+      setSaving(false);
     }
-    setName(''); setCat('Keychains'); setBg('pink'); setDrawing(null); setPhoto(null); setPrice(''); setStory(''); setVoice(null);
-    setMsg({ text: item.name + ' is in the shop!', ok: true });
   };
 
   const drop = (fn: (f?: File) => void) => (e: DragEvent) => { e.preventDefault(); fn(e.dataTransfer.files[0]); };
@@ -116,7 +128,7 @@ export default function Admin() {
   return (
     <div className="page">
       <div className="page-inner adm">
-        <StudioHeader links={[{ to: '/studio/products', label: 'All products' }, { to: '/', label: 'View shop →' }]} />
+        <StudioHeader links={[{ to: '/studio/products', label: 'All products' }, { to: '/studio/orders', label: 'Orders' }, { to: '/', label: 'View shop →' }]} />
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'flex-start' }}>
           <form className="form-card adm-form" onSubmit={save} noValidate>
@@ -246,14 +258,14 @@ export default function Admin() {
               </div>
               {voice && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <audio controls src={voice} style={{ flex: 1, minWidth: 220, height: 44 }} />
+                  <audio controls src={voice.url} style={{ flex: 1, minWidth: 220, height: 44 }} />
                   <button type="button" className="adm-remove" onClick={() => setVoice(null)}>Remove</button>
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', paddingTop: 4 }}>
-              <button type="submit" className="btn-dark adm-submit press press-pink">Add to shop</button>
+              <button type="submit" className="btn-dark adm-submit press press-pink" disabled={saving}>{saving ? 'Saving…' : 'Add to shop'}</button>
               <span className="hand" role="status" style={{ fontSize: 22, color: msg.ok ? '#2E8B57' : '#C8283F' }}>{msg.text}</span>
             </div>
           </form>
@@ -272,27 +284,6 @@ export default function Admin() {
             </div>
           </aside>
         </div>
-
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>Added by you</h2>
-          {list.length === 0 && (
-            <p className="hand" style={{ margin: 0, fontSize: 22, color: 'var(--faint)' }}>Nothing yet. New products show up in the shop right away.</p>
-          )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-            {list.map(p => (
-              <div key={p.id} className="adm-row">
-                <div className="adm-row-thumb" style={{ background: colorOf(p.bg) }}>
-                  <img src={p.drawing} alt="" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span className="adm-row-name">{p.name}</span>
-                  <span className="hand" style={{ fontSize: 19, color: 'var(--muted)' }}>{p.cat} · {p.price}t</span>
-                </div>
-                <button type="button" className="del-btn adm-row-del" aria-label={`Delete ${p.name}`} onClick={() => deleteProduct(fromStored(p))}>✕</button>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );

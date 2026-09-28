@@ -1,34 +1,21 @@
-import { useMemo, useSyncExternalStore } from 'react';
-import { BUILTIN, fromStored, type Crop, type Product, type StoredProduct } from './products';
-import type { BgKey } from './theme';
+import { useQuery } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
+import { api } from './api';
+import { productFromApi, type ApiProduct, type Product } from './products';
+import { queryClient } from './queryClient';
 
-// Everything lives in this browser's localStorage until the shop has a backend.
-// Keys match the Claude Design prototypes so data carries over.
-export const KEYS = {
-  products: 'delishop-products',
-  hidden: 'delishop-hidden',
-  bag: 'delishop-bag',
-  orders: 'delishop-orders',
-} as const;
+export const KEYS = { bag: 'delishop-bag' } as const;
 type Key = (typeof KEYS)[keyof typeof KEYS];
 
-export interface BagItem extends Omit<Crop, 'photo'> {
-  name: string;
-  price: number;
-  bg: BgKey;
-  real: string | null;
+/** What the cart keeps in this browser's localStorage — just enough to re-order from the server. */
+export interface BagEntry {
+  productId: string;
   qty: number;
 }
 
-export interface Order {
-  no: string;
-  date: number;
-  name: string;
-  phone: string;
-  items: { name: string; price: number; qty: number }[];
-}
-
 const LOCAL_EVENT = 'delishop-storage';
+// useSyncExternalStore requires a stable reference when nothing changed, so
+// re-parsing on every call (without this) makes it re-render forever.
 const cache = new Map<Key, { raw: string | null; value: unknown }>();
 
 function readRaw(key: Key): string | null {
@@ -75,34 +62,35 @@ export function useStored<T>(key: Key): T[] {
   return useSyncExternalStore(subscribe, () => read<T>(key));
 }
 
-/**
- * Every product still for sale. The shop lists originals first and then
- * studio additions oldest-first; the studio lists its newest additions first.
- */
+/** The shop lists active products in `position` order; the studio lists everything (incl. archived), newest first. */
 export function useCatalog(order: 'shop' | 'studio'): Product[] {
-  const stored = useStored<StoredProduct>(KEYS.products);
-  const hidden = useStored<string>(KEYS.hidden);
-  return useMemo(() => {
-    const custom = stored.map(fromStored);
-    const all = order === 'shop' ? BUILTIN.concat(custom.slice().reverse()) : custom.concat(BUILTIN);
-    return all.filter(p => !hidden.includes(p.name));
-  }, [stored, hidden, order]);
+  const path = order === 'shop' ? '/products' : '/studio/products';
+  const { data } = useQuery({
+    queryKey: order === 'shop' ? ['products'] : ['studio', 'products'],
+    queryFn: () => api.get<{ products: ApiProduct[] }>(path),
+  });
+  return (data?.products ?? []).map(productFromApi);
 }
 
 export function addToBag(p: Product) {
-  const bag = read<BagItem>(KEYS.bag).map(b => ({ ...b }));
-  const hit = bag.find(b => b.name === p.name);
+  const bag = read<BagEntry>(KEYS.bag);
+  const hit = bag.find(b => b.productId === p.id);
   if (hit) hit.qty += 1;
-  else bag.push({ name: p.name, price: p.price, bg: p.bg, src: p.src, iw: p.iw, ih: p.ih, x: p.x, y: p.y, w: p.w, h: p.h, clip: p.clip, real: p.real, qty: 1 });
+  else bag.push({ productId: p.id, qty: 1 });
   write(KEYS.bag, bag);
 }
 
-/**
- * Takes a product off the shop and out of every bag. Studio additions are
- * erased; the built-in originals are only hidden.
- */
-export function deleteProduct(p: Product) {
-  if (p.custom) write(KEYS.products, read<StoredProduct>(KEYS.products).filter(c => c.id !== p.id));
-  else write(KEYS.hidden, Array.from(new Set(read<string>(KEYS.hidden).concat(p.name))));
-  write(KEYS.bag, read<BagItem>(KEYS.bag).filter(b => b.name !== p.name));
+export function changeBagQty(productId: string, delta: number) {
+  const bag = read<BagEntry>(KEYS.bag)
+    .map(b => b.productId === productId ? { ...b, qty: b.qty + delta } : b)
+    .filter(b => b.qty > 0);
+  write(KEYS.bag, bag);
+}
+
+/** Archives the product on the server and takes it out of this browser's bag. */
+export async function deleteProduct(p: Product) {
+  await api.del(`/studio/products/${p.id}`);
+  write(KEYS.bag, read<BagEntry>(KEYS.bag).filter(b => b.productId !== p.id));
+  await queryClient.invalidateQueries({ queryKey: ['products'] });
+  await queryClient.invalidateQueries({ queryKey: ['studio', 'products'] });
 }
