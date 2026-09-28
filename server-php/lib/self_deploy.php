@@ -9,8 +9,17 @@ declare(strict_types=1);
  * web server user can't overwrite for whatever host-specific reason --
  * was reported as a successful deploy with no way to tell. Confirmed
  * this can happen in practice: files_copied stayed a plausible-looking
- * number across several deploys while a specific PHP file never actually
- * changed on disk.
+ * number across several deploys while specific PHP files never actually
+ * changed on disk -- most tellingly, THIS file: every request that runs
+ * self-deploy has already require_once'd this exact script (along with
+ * every other file index.php pulls in), so a direct in-place copy() is
+ * overwriting a file this very request is currently executing from.
+ * copy()+rename() instead: write to a temp path (a brand-new inode, no
+ * conflict with the running process's already-open file descriptor for
+ * the old one), then atomically rename() it over the target. POSIX
+ * rename() just repoints the directory entry; a process with the old
+ * file already open keeps reading its old inode safely until it exits,
+ * and the next request sees the new file immediately.
  */
 function ds_recursive_copy(string $src, string $dst): array
 {
@@ -25,9 +34,13 @@ function ds_recursive_copy(string $src, string $dst): array
             $sub = ds_recursive_copy($srcPath, $dstPath);
             $copied += $sub['copied'];
             $failed = array_merge($failed, $sub['failed']);
-        } elseif (copy($srcPath, $dstPath)) {
+            continue;
+        }
+        $tmpPath = $dstPath . '.new-' . bin2hex(random_bytes(4));
+        if (copy($srcPath, $tmpPath) && rename($tmpPath, $dstPath)) {
             $copied++;
         } else {
+            @unlink($tmpPath);
             $failed[] = $dstPath;
         }
     }
