@@ -33,6 +33,7 @@ function ds_config(): array
         'sms_api_key' => getenv('SMS_API_KEY') ?: '',
         'setup_token' => getenv('SETUP_TOKEN') ?: '',
         'deploy_token' => getenv('DEPLOY_TOKEN') ?: '',
+        'debug' => (bool) getenv('DEBUG'),
     ];
     return $config;
 }

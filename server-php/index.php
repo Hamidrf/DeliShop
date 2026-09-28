@@ -100,5 +100,20 @@ try {
     ds_send_error($e);
 } catch (Throwable $e) {
     error_log('delishop unhandled error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-    ds_send_error(new ApiError(500, 'internal_error', 'Something went wrong.'));
+    $err = new ApiError(500, 'internal_error', 'Something went wrong.');
+    // TEMPORARY: set 'debug' => true in the private config file to see the
+    // real exception in the response instead of hunting for a log file.
+    // Turn it back off once the bug's found -- never leave this on.
+    if (ds_config()['debug'] ?? false) {
+        $err->extra = [
+            'debug' => [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => explode("\n", $e->getTraceAsString()),
+            ],
+        ];
+    }
+    ds_send_error($err);
 }

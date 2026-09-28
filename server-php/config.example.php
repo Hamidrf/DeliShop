@@ -42,4 +42,10 @@ return [
     // after every push to main. Generate a long random value and also add
     // it as the DEPLOY_TOKEN secret in the GitHub repo's settings.
     'deploy_token' => '',
+
+    // TEMPORARY debugging aid: when true, a 500 response includes the real
+    // exception (message/file/line/trace) instead of just "Something went
+    // wrong." Turn back to false (or remove the line) once you're done --
+    // never leave this on, it leaks internal paths/details to the client.
+    'debug' => false,
 ];
