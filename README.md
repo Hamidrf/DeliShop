@@ -1,25 +1,56 @@
-# CODING AGENTS: READ THIS FIRST
+# DeliShop
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+A small online shop for handmade keychains/earrings/pins: browse products,
+place an order with a payment receipt photo, and an admin "studio" to manage
+products and review orders.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+- **`app/`** — React + TypeScript + Vite frontend.
+- **`server-php/`** — plain PHP API (no framework, no Composer) + MySQL.
+- Both are built and deployed together as one site at **https://deliarte.ir**,
+  same origin (the PHP API answers `/api/*`, everything else is the built
+  frontend).
 
-## What you should do — IMPORTANT
+**Before changing anything here, read [`CLAUDE.md`](./CLAUDE.md)** — it has
+the things that aren't obvious from the code alone (how deploys work, what
+not to break, where the secrets live).
 
-**Read the chat transcripts first.** There are 2 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+## Local development
 
-**Read `project/DeliShop Inventory.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+Frontend:
+```sh
+cd app
+npm install
+npm run dev          # http://localhost:5173
+```
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+Backend (needs a local MySQL/MariaDB) — see [`server-php/README.md`](./server-php/README.md)
+for the full setup. Quick version:
+```sh
+cd server-php
+mysql -u root -e "CREATE DATABASE delishop_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root delishop_dev < migrations/001_init.sql
+# set the env vars server-php/README.md lists, then:
+php scripts/create_admin.php admin somepassword
+php scripts/seed.php
+php -S localhost:3000 router.php
+```
+Run both at once; Vite's dev server proxies `/api` and `/uploads` to the PHP
+server on port 3000 (see `app/vite.config.ts`).
 
-## About the design files
+## Production
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+See [`DEPLOY.md`](./DEPLOY.md) — hosting details, how the automated deploy
+pipeline works, and what to do for one-off admin tasks. Short version:
+**pushing to `main` deploys to the live site automatically, with no manual
+step.** There's no staging environment, so test locally first.
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+## Other docs
 
-## Bundle contents
-
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `DeliShop products page` project files (HTML prototypes, assets, components)
+- [`docs/backend-architecture.md`](./docs/backend-architecture.md) — the
+  original design doc (data model, API contract, auth design). Written for
+  an earlier Node.js/PostgreSQL/Liara version that was abandoned in favor of
+  the current PHP/MySQL/cPanel setup (see `DEPLOY.md` for why), but the API
+  contract and data model it describes are still accurate.
+- [`chats/`](./chats/), [`project/`](./project/) — the original design
+  handoff (HTML/CSS mockups + design chat transcripts) this app was built
+  from. Historical reference only; not part of the running app.

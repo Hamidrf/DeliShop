@@ -85,6 +85,15 @@ fetch('/api/setup/create-admin', {
 }).then(r => r.json()).then(console.log)
 ```
 
+## Rolling back a bad deploy
+
+There's no separate rollback mechanism — `self-deploy` always pulls whatever
+is currently at the tip of the `deploy` branch, which always mirrors the
+tip of `main`. To roll back: `git revert` the bad commit(s) on `main` (or
+push a fix) and push. That rebuilds and redeploys automatically, same as
+any other change. There's no staging environment, so a bad push is live
+until you push the fix — test locally first (see `CLAUDE.md`).
+
 ## Daily cleanup cron (optional, not yet set up)
 
 cPanel → **Cron Jobs** → add one running daily:

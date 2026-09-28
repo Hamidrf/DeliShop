@@ -63,12 +63,19 @@ server-php/
                         Apache), `receipts` outside it (only readable through the
                         authenticated receipt route)
     uploads.php         File-type sniffing + image processing (Imagick, falls back to GD)
-    uploads_extra.php   Re-encode-only helper, used by scripts/seed.php
+    uploads_extra.php   Re-encode-only helper, used by lib/seed_data.php
+    seed_data.php        The 16 original products + ds_run_seed(), shared by
+                        scripts/seed.php and the POST /api/setup/seed route
+    self_deploy.php       Downloads+extracts the `deploy` branch zip and copies it over
+                        public_html -- see ../DEPLOY.md. Used by POST /api/setup/self-deploy
     rate_limit.php      MySQL-backed fixed-window rate limiting (a PHP request under
                         typical shared hosting is a fresh process each time, so there's
                         no in-memory store to lean on like the original Node version had)
     serialize.php       DB row -> the JSON shape the frontend expects
-  routes/               One file per resource, mirroring the old server/src/routes/*.ts
+  routes/               One file per resource, mirroring the old server/src/routes/*.ts.
+                        auth.php also has the /api/setup/* routes (create-admin, seed,
+                        self-deploy) -- Terminal-less operational helpers, not "auth" in
+                        the login sense; see ../DEPLOY.md and ../CLAUDE.md for their tokens.
   scripts/              CLI-only (create_admin, seed, cleanup) -- also blocked from direct
                         web access via .htaccess and their own php_sapi_name() check
   migrations/001_init.sql   MySQL schema (see its header comment for the differences
