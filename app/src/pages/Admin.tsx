@@ -20,7 +20,8 @@ function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') 
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         const ctx = c.getContext('2d')!;
-        // flatten onto white so the drawing's paper multiplies away cleanly
+        // JPEG has no alpha channel, so a transparent source must be flattened
+        // onto white first or the canvas's default black shows through instead.
         if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
         ctx.drawImage(img, 0, 0, w, h);
         c.toBlob(blob => {
@@ -67,7 +68,7 @@ export default function Admin() {
   };
   useEffect(() => stopRec, []);
 
-  const pickDrawing = async (f?: File) => { if (f) { setDrawing(await fileToImage(f, 1000, 'image/jpeg')); setMsg({ text: '', ok: true }); } };
+  const pickDrawing = async (f?: File) => { if (f) { setDrawing(await fileToImage(f, 1000, 'image/png')); setMsg({ text: '', ok: true }); } };
   const pickPhoto = async (f?: File) => { if (f) { setPhoto(await fileToImage(f, 800, 'image/png')); setMsg({ text: '', ok: true }); } };
   const pickVoice = (f?: File) => { if (f) { setVoice({ blob: f, url: URL.createObjectURL(f) }); setMsg({ text: '', ok: true }); } };
 
@@ -104,7 +105,7 @@ export default function Admin() {
     form.set('color', bg);
     form.set('price', price);
     form.set('story', story.trim());
-    form.set('drawing', drawing.blob, 'drawing.jpg');
+    form.set('drawing', drawing.blob, 'drawing.png');
     if (photo) form.set('photo', photo.blob, 'photo.png');
     if (voice) form.set('voice', voice.blob, 'voice.webm');
 
@@ -194,7 +195,7 @@ export default function Admin() {
                   onDragOver={e => e.preventDefault()}
                   onDrop={drop(pickDrawing)}
                 >
-                  {drawing ? <img src={drawing.url} alt="Drawing" className="adm-drop-img" style={{ mixBlendMode: 'multiply' }} /> : (
+                  {drawing ? <img src={drawing.url} alt="Drawing" className="adm-drop-img" /> : (
                     <div className="adm-drop-empty">
                       <span style={{ fontSize: 40, lineHeight: 1 }}>✎</span>
                       <span className="hand">Drop the kid's drawing</span>
