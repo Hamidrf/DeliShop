@@ -84,11 +84,54 @@ function ds_process_image(string $bytes, int $maxSide, int $quality, bool $flatt
     return ds_process_image_gd($bytes, $maxSide, $quality, $flattenWhite);
 }
 
+/**
+ * Portable replacement for Imagick::autoOrientImage(), which doesn't exist
+ * on every Imagick build (confirmed missing on the production host --
+ * "Call to undefined method Imagick::autoOrientImage()"). Same behavior:
+ * rotates/flips per the EXIF orientation tag, then resets it to normal.
+ */
+function ds_imagick_auto_orient(Imagick $img): void
+{
+    if (method_exists($img, 'autoOrientImage')) {
+        $img->autoOrientImage();
+        return;
+    }
+    $white = new ImagickPixel();
+    switch ($img->getImageOrientation()) {
+        case Imagick::ORIENTATION_TOPRIGHT:
+            $img->flopImage();
+            break;
+        case Imagick::ORIENTATION_BOTTOMRIGHT:
+            $img->rotateImage($white, 180);
+            break;
+        case Imagick::ORIENTATION_BOTTOMLEFT:
+            $img->flipImage();
+            break;
+        case Imagick::ORIENTATION_LEFTTOP:
+            $img->flipImage();
+            $img->rotateImage($white, 90);
+            break;
+        case Imagick::ORIENTATION_RIGHTTOP:
+            $img->rotateImage($white, 90);
+            break;
+        case Imagick::ORIENTATION_RIGHTBOTTOM:
+            $img->flopImage();
+            $img->rotateImage($white, 90);
+            break;
+        case Imagick::ORIENTATION_LEFTBOTTOM:
+            $img->rotateImage($white, -90);
+            break;
+        default:
+            break; // TOPLEFT (normal) or UNDEFINED: nothing to do
+    }
+    $img->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+}
+
 function ds_process_image_imagick(string $bytes, int $maxSide, int $quality, bool $flattenWhite): array
 {
     $img = new Imagick();
     $img->readImageBlob($bytes);
-    $img->autoOrientImage();
+    ds_imagick_auto_orient($img);
 
     $w = $img->getImageWidth();
     $h = $img->getImageHeight();
