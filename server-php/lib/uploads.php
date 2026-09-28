@@ -212,10 +212,10 @@ function ds_process_image_gd(string $bytes, int $maxSide, int $quality, bool $fl
     return ['buffer' => $blob, 'width' => $newW, 'height' => $newH];
 }
 
-/** Kid's drawing -> WebP flattened onto white, longest side capped at 1200px. */
+/** Kid's drawing -> WebP, transparency preserved, longest side capped at 1200px. */
 function ds_process_drawing(string $bytes): array
 {
-    return ds_process_image($bytes, 1200, 86, true);
+    return ds_process_image($bytes, 1200, 86, false);
 }
 
 /** Product photo -> WebP, transparency preserved, longest side capped at 1000px. */
