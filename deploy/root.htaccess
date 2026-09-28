@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# /api/<rest> -> the PHP front controller, as a query string (PATH_INFO
+# handling varies too much across shared-hosting PHP configs to rely on).
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ api/index.php?ds_route=$1 [QSA,L]
+
+# Everything else: serve a real file/directory as-is (JS/CSS/images from the
+# Vite build), otherwise fall back to index.html so React Router can handle
+# the route client-side.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]

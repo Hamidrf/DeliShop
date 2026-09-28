@@ -1,0 +1,11 @@
+# Only index.php (the front controller) is meant to be requested directly.
+# Everything else here is a library or CLI-only script.
+<FilesMatch "^(?!index\.php$).*\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -1,8 +1,0 @@
-{
-  "name": "delishop",
-  "private": true,
-  "scripts": {
-    "build": "npm ci --prefix app && npm run build --prefix app && npm ci --prefix server && npm run build --prefix server",
-    "start": "node server/dist/index.js"
-  }
-}
