@@ -7,10 +7,7 @@
   a MySQL database. See `server-php/README.md` for how it's structured.
 
 Both run from the same shared cPanel host, same origin (no CORS): the built
-frontend at the site root, the PHP API under `/api/`. `.github/workflows/ci.yml`
-builds the frontend, syntax-checks the PHP, assembles both into one tree, and
-pushes it to a `deploy` branch on every push to `main`. cPanel's **Git™
-Version Control** pulls from that branch and copies it into `public_html`.
+frontend at the site root, the PHP API under `/api/`.
 
 An earlier version of this project used a Node.js/PostgreSQL backend meant
 for Liara (a Node-friendly host) — abandoned in favor of this PHP/MySQL
@@ -22,95 +19,73 @@ design; it's kept for reference but no longer describes what's deployed.
 
 - cPanel user: `deliar` (home: `/home/deliar`)
 - Primary domain: `deliarte.ir`, document root: `/home/deliar/public_html`
-- DNS: already points at this host, SSL already active — nothing to change there.
+- DNS: already points at this host, SSL already active.
 - PHP extensions confirmed available: `imagick`, `gd`, `pdo_mysql` (as
-  `nd_pdo_mysql`/`mysqlnd` in this cPanel's extension list), `exif`.
+  `nd_pdo_mysql`/`mysqlnd` in this cPanel's extension list), `exif`, `curl`, `zip`.
+- Database: `deliar_delishop` (MySQL), created via cPanel's Database Wizard.
+- Private config file: `/home/deliar/delishop-config.php` (one level above
+  `public_html`, never in git, never touched by a deploy).
 
-## One-time setup in cPanel (manual — needs your login)
+## How deploys work
 
-### 1. Create the MySQL database
+`.github/workflows/ci.yml` builds the frontend, syntax-checks the PHP,
+assembles both into one tree, and pushes it to a `deploy` branch on every
+push to `main`.
 
-**Database Wizard** (or **Manage My Databases**) →
+**cPanel's own Git™ Version Control cannot reach GitHub from this host**
+(confirmed: `Update from Remote` fails with "could not contact the remote
+repository" — likely an international-connectivity restriction specific to
+whatever protocol/IPs that tool uses). PHP's `curl`, however, *can* reach
+`codeload.github.com` from this host (confirmed via a connectivity test).
 
-1. Create a database (e.g. `delishop`; cPanel will prefix it, giving you
-   something like `deliar_delishop`).
-2. Create a database user with a strong password, and grant it **All
-   Privileges** on that database.
-3. Note the full database name, username, and password — you'll need them
-   for step 3 below (not for me; keep them out of chat).
+So deploys are fully automated a different way: right after the GitHub
+Action pushes the `deploy` branch, it calls
+`POST https://deliarte.ir/api/setup/self-deploy` with a secret token. That
+route (`server-php/lib/self_deploy.php`) downloads the `deploy` branch as a
+zip straight from `codeload.github.com` and copies it over `public_html`,
+overwriting matching files. It never deletes anything, so
+`public_html/uploads/media` (not part of the deploy artifact) is always
+left alone.
 
-### 2. Create the private config file (outside public_html, holds secrets)
+**Net effect: pushing to `main` deploys to the live site with no manual
+step on this host.** The old cPanel Git repository (if still listed under
+Git™ Version Control) is no longer used for anything and can be ignored or
+deleted.
 
-Via **File Manager**, go to `/home/deliar/` (one level *above* `public_html`)
-and create a file named exactly `delishop-config.php` there, with this
-content (copy `server-php/config.example.php` from the repo as a starting
-point and fill in your real values):
+### Secrets involved
 
-```php
-<?php
-return [
-    'db_host' => '127.0.0.1',
-    'db_name' => 'deliar_delishop',      // from step 1
-    'db_user' => 'deliar_delishop',      // from step 1
-    'db_pass' => 'the real password',    // from step 1
+- `deploy_token` in the private config file, and the same value as the
+  `DEPLOY_TOKEN` secret in the GitHub repo's Settings → Secrets and
+  variables → Actions. Permanent — required for every deploy to work.
+- `setup_token` in the private config file gated two one-time bootstrap
+  routes (`/api/setup/create-admin`, `/api/setup/seed`) used during initial
+  setup, when this host had no Terminal/SSH access. **Left blank now that
+  setup is done** — those routes 404 until/unless it's set again.
 
-    'app_origin' => 'https://deliarte.ir',
-    'is_production' => true,
+## Already done
 
-    'media_dir' => '/home/deliar/public_html/uploads/media',
-    'media_public_base' => '/uploads/media',
-    'receipts_dir' => '/home/deliar/uploads-private/receipts',
+- Database created and migrated (`server-php/migrations/001_init.sql`).
+- First admin account created (logged into `/studio/login` — confirmed
+  working).
+- The 16 original products seeded.
+- Automated deploy via `self-deploy` wired up and confirmed working.
 
-    'owner_phone' => '',
-    'sms_api_key' => '',
-];
+## If you ever need Terminal-less one-off admin work again
+
+Temporarily set `setup_token` back to a new secret in the private config
+file, push any small change to `main` (so the new token reaches the live
+site via self-deploy), use the route, then blank `setup_token` again:
+
+```js
+// In the browser console, on https://deliarte.ir
+fetch('/api/setup/create-admin', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token: 'TOKEN', username: '...', password: '...' }),
+}).then(r => r.json()).then(console.log)
 ```
 
-This file is never in git and never touched by a deploy, so it survives
-every future push.
-
-### 3. Run the migration once
-
-Open **phpMyAdmin** (Databases section) → select your new database → **SQL**
-tab → paste the contents of `server-php/migrations/001_init.sql` → **Go**.
-This creates the tables.
-
-### 4. Create the Git repository in cPanel
-
-**Git™ Version Control** → **Create**:
-
-- **Clone URL**: `https://github.com/Hamidrf/DeliShop.git`
-- **Repository Path**: e.g. `/home/deliar/repositories/delishop`
-- **Repository Name**: `DeliShop`
-- Click **Create**, then switch its checked-out branch to `deploy` (not
-  `main` — `main` has source code, not the built site). If there's no
-  branch selector in the UI, use **Terminal** (if your plan has one):
-  ```
-  cd /home/deliar/repositories/delishop
-  git checkout deploy
-  ```
-- Go to the **Pull or Deploy** tab and click **Deploy HEAD Commit**.
-
-### 5. Create the first admin account
-
-Via **Terminal** (Advanced section in cPanel, if available):
-
-```sh
-php /home/deliar/public_html/api/scripts/create_admin.php youradminname yourpassword
-```
-
-If your plan has no Terminal, tell me and we'll find another way (e.g. a
-one-time CLI-guarded script you hit once over HTTP and then delete).
-
-### 6. (Optional) Seed the original 16 products
-
-Only if the database is empty and you want the original catalog back:
-
-```sh
-php /home/deliar/public_html/api/scripts/seed.php
-```
-
-### 7. (Optional) Daily cleanup cron
+## Daily cleanup cron (optional, not yet set up)
 
 cPanel → **Cron Jobs** → add one running daily:
 
@@ -120,17 +95,3 @@ php /home/deliar/public_html/api/scripts/cleanup.php
 
 Deletes expired login sessions and receipts for orders finished over a year
 ago.
-
-## Ongoing deploys
-
-Pushing to `main` rebuilds and updates the `deploy` branch automatically,
-but cPanel doesn't auto-pull — after each push, go to **Git™ Version
-Control** → this repo → **Pull or Deploy** → **Update from Remote**, then
-**Deploy HEAD Commit**.
-
-## Still needed from you
-
-- Steps 1–6 above (I can't reach your cPanel account directly).
-- Confirm once the admin account is created and you've logged into the
-  studio at `/studio/login` so we can verify the whole path end-to-end on
-  the live site.
