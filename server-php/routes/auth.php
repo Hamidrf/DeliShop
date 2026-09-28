@@ -57,15 +57,6 @@ function ds_route_auth_me(): void
 }
 
 /**
- * TEMPORARY diagnostic route -- remove once the config-file/open_basedir
- * question is settled. Reveals no secrets (just lengths, not values).
- */
-function ds_route_setup_diagnostics(): void
-{
-    echo json_encode(ds_config_debug_info());
-}
-
-/**
  * HTTP equivalent of scripts/create_admin.php, for hosts with no
  * Terminal/SSH access. Only reachable when config('setup_token') is set to
  * a non-empty secret (see config.example.php) -- disabled (404) otherwise.
@@ -106,4 +97,23 @@ function ds_route_setup_create_admin(): void
             ->execute([$id, $normalized, $hash, ds_now()]);
         echo json_encode(['ok' => true, 'action' => 'created', 'username' => $normalized]);
     }
+}
+
+/**
+ * HTTP equivalent of scripts/seed.php, for hosts with no Terminal/SSH
+ * access. Same setup_token gate as ds_route_setup_create_admin(). Loads the
+ * 16 original products only if the products table is currently empty.
+ */
+function ds_route_setup_seed(): void
+{
+    $c = ds_config();
+    $configuredToken = $c['setup_token'] ?? '';
+    if ($configuredToken === '') throw ds_not_found();
+
+    $body = ds_json_body();
+    $token = is_array($body) && isset($body['token']) && is_string($body['token']) ? $body['token'] : '';
+    if (!hash_equals($configuredToken, $token)) throw ds_not_found();
+
+    $seeded = ds_run_seed();
+    echo json_encode(['ok' => true, 'seeded' => $seeded, 'count' => count($seeded)]);
 }

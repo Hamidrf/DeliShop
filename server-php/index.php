@@ -16,6 +16,7 @@ require_once __DIR__ . '/lib/session.php';
 require_once __DIR__ . '/lib/rate_limit.php';
 require_once __DIR__ . '/lib/storage.php';
 require_once __DIR__ . '/lib/uploads.php';
+require_once __DIR__ . '/lib/seed_data.php';
 require_once __DIR__ . '/lib/serialize.php';
 require_once __DIR__ . '/routes/products.php';
 require_once __DIR__ . '/routes/orders.php';
@@ -68,7 +69,7 @@ $routes = [
     ['POST', '#^/auth/logout$#', 'ds_route_auth_logout'],
     ['GET', '#^/auth/me$#', 'ds_route_auth_me'],
     ['POST', '#^/setup/create-admin$#', 'ds_route_setup_create_admin'],
-    ['GET', '#^/setup/diagnostics$#', 'ds_route_setup_diagnostics'],
+    ['POST', '#^/setup/seed$#', 'ds_route_setup_seed'],
     ['GET', '#^/studio/products$#', 'ds_route_studio_products_list'],
     ['POST', '#^/studio/products$#', 'ds_route_studio_products_create'],
     ['DELETE', '#^/studio/products/([^/]+)$#', 'ds_route_studio_products_delete'],
