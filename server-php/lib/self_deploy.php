@@ -38,14 +38,27 @@ function ds_recursive_delete(string $dir): void
  * matching files. Never deletes anything not present in the new zip, so
  * uploads/media (not part of the deploy artifact) is untouched. Returns a
  * summary array.
+ *
+ * $sha, when given a full 40-hex-char commit SHA, fetches that exact commit
+ * instead of the `refs/heads/deploy` branch ref. This matters: the deploy
+ * branch is force-pushed as a brand-new commit on every deploy, but
+ * codeload.github.com caches branch-ref zip downloads for a few minutes --
+ * and self-deploy is called within seconds of the push, so a ref-based
+ * fetch can silently return the PREVIOUS deploy's content. Confirmed on
+ * this host: repeated uploads processed identically across several deploys
+ * that changed the exact code path handling them, even after a PHP
+ * restart ruled out any PHP-side caching. A commit SHA is content-addressed
+ * and safe to fetch even from a cache, since it can only ever mean one
+ * exact tree.
  */
-function ds_self_deploy(): array
+function ds_self_deploy(?string $sha = null): array
 {
     if (!class_exists('ZipArchive')) {
         throw new ApiError(500, 'zip_unavailable', 'The PHP zip extension is not available.');
     }
 
-    $zipUrl = 'https://codeload.github.com/Hamidrf/DeliShop/zip/refs/heads/deploy';
+    $ref = ($sha !== null && preg_match('/^[0-9a-f]{40}$/', $sha)) ? $sha : 'refs/heads/deploy';
+    $zipUrl = "https://codeload.github.com/Hamidrf/DeliShop/zip/{$ref}";
     $tmpZip = sys_get_temp_dir() . '/delishop-deploy-' . bin2hex(random_bytes(6)) . '.zip';
 
     $fp = fopen($tmpZip, 'wb');
@@ -106,5 +119,5 @@ function ds_self_deploy(): array
     // show whether this ran.
     $opcacheReset = function_exists('opcache_reset') ? opcache_reset() : null;
 
-    return ['files_copied' => $copied, 'dest' => $destRoot, 'opcache_reset' => $opcacheReset];
+    return ['files_copied' => $copied, 'dest' => $destRoot, 'opcache_reset' => $opcacheReset, 'fetched_ref' => $ref];
 }
