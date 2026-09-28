@@ -24,7 +24,12 @@ function CardArt({ p }: { p: Product }) {
         <img
           src={p.src}
           alt=""
-          style={{ ...cropStyle(p), mixBlendMode: 'multiply', filter: p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.25) brightness(1.08)' }}
+          className="card-art-img"
+          style={{
+            ...cropStyle(p),
+            mixBlendMode: 'multiply',
+            filter: `grayscale(var(--art-gray, 1)) ${p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.25) brightness(1.08)'}`,
+          }}
         />
       </div>
     </div>
@@ -104,8 +109,11 @@ export default function Shop() {
                 onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setOpenName(p.name); } }}
                 style={{ '--tilt': `${TILTS[i % 6]}deg`, '--drip': `${DRIP_SECONDS}s` } as CSSProperties}
               >
-                <div className="card-layer card-gray" style={layer}><CardArt p={p} /></div>
-                <div className="card-layer card-color" style={{ ...layer, WebkitMaskImage: DRIP, maskImage: DRIP }}><CardArt p={p} /></div>
+                {/* the paper colour drips in behind the drawing; the drawing itself sits on top,
+                    unmasked, and only fades from sketch grey to colour (see --art-gray below) */}
+                <div className="card-layer card-gray" style={layer} />
+                <div className="card-layer card-color" style={{ ...layer, WebkitMaskImage: DRIP, maskImage: DRIP }} />
+                <CardArt p={p} />
                 <div className="card-num">{i + 1}</div>
                 <div className="card-label">
                   <span>{p.price}t</span>
