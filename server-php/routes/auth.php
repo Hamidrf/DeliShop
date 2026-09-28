@@ -57,6 +57,15 @@ function ds_route_auth_me(): void
 }
 
 /**
+ * TEMPORARY diagnostic route -- remove once the config-file/open_basedir
+ * question is settled. Reveals no secrets (just lengths, not values).
+ */
+function ds_route_setup_diagnostics(): void
+{
+    echo json_encode(ds_config_debug_info());
+}
+
+/**
  * HTTP equivalent of scripts/create_admin.php, for hosts with no
  * Terminal/SSH access. Only reachable when config('setup_token') is set to
  * a non-empty secret (see config.example.php) -- disabled (404) otherwise.

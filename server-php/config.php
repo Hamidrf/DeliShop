@@ -35,3 +35,19 @@ function ds_config(): array
     ];
     return $config;
 }
+
+/** TEMPORARY: reveals no secrets, just whether the external config file was found/used. */
+function ds_config_debug_info(): array
+{
+    $externalPath = getenv('DELISHOP_CONFIG_FILE') ?: (__DIR__ . '/../../delishop-config.php');
+    $c = ds_config();
+    return [
+        'php_version' => PHP_VERSION,
+        'open_basedir' => ini_get('open_basedir') ?: null,
+        'config_dir' => __DIR__,
+        'external_config_path' => $externalPath,
+        'external_config_is_file' => is_file($externalPath),
+        'setup_token_len' => strlen((string) ($c['setup_token'] ?? '')),
+        'db_pass_len' => strlen((string) ($c['db_pass'] ?? '')),
+    ];
+}
