@@ -28,5 +28,5 @@ export const bgImage = (bg: BgKey) => `/assets/bg/${bg}.png`;
 export const colorOf = (bg: string) => COLORS[bg as BgKey] ?? '#fff';
 
 /** Payment card shown on the checkout page. */
-export const CARD_NUMBER = '6037 9975 1234 5678';
-export const CARD_HOLDER = 'DeliShop';
+export const CARD_NUMBER = '6219 8619 5193 7522';
+export const CARD_HOLDER = 'Delnia Firooze';
