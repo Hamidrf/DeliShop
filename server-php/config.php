@@ -31,6 +31,7 @@ function ds_config(): array
         'receipts_dir' => getenv('RECEIPTS_DIR') ?: (__DIR__ . '/../uploads-private/receipts'),
         'owner_phone' => getenv('OWNER_PHONE') ?: '',
         'sms_api_key' => getenv('SMS_API_KEY') ?: '',
+        'setup_token' => getenv('SETUP_TOKEN') ?: '',
     ];
     return $config;
 }

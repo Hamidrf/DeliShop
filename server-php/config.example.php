@@ -28,4 +28,11 @@ return [
     // blank to skip.
     'owner_phone' => '',
     'sms_api_key' => '',
+
+    // Lets POST /api/setup/create-admin create or reset an admin account
+    // over HTTP -- for hosts with no Terminal/SSH access, where
+    // scripts/create_admin.php can't be run directly. Leave blank to
+    // disable that route entirely (recommended once you no longer need it:
+    // set this back to '' and redeploy).
+    'setup_token' => '',
 ];

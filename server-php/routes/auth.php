@@ -55,3 +55,46 @@ function ds_route_auth_me(): void
     if (!$admin) throw ds_not_logged_in();
     echo json_encode(['username' => $admin['username']]);
 }
+
+/**
+ * HTTP equivalent of scripts/create_admin.php, for hosts with no
+ * Terminal/SSH access. Only reachable when config('setup_token') is set to
+ * a non-empty secret (see config.example.php) -- disabled (404) otherwise.
+ * Creates the admin, or resets an existing one's password (logging it out
+ * of all sessions) if the username already exists.
+ */
+function ds_route_setup_create_admin(): void
+{
+    $c = ds_config();
+    $configuredToken = $c['setup_token'] ?? '';
+    if ($configuredToken === '') throw ds_not_found();
+
+    $body = ds_json_body();
+    $token = is_array($body) && isset($body['token']) && is_string($body['token']) ? $body['token'] : '';
+    if (!hash_equals($configuredToken, $token)) throw ds_not_found();
+
+    $username = is_array($body) && isset($body['username']) && is_string($body['username']) ? trim($body['username']) : '';
+    $password = is_array($body) && isset($body['password']) && is_string($body['password']) ? $body['password'] : '';
+    if ($username === '' || strlen($password) < 8) {
+        throw ds_validation_failed('username and password (8+ characters) are required.');
+    }
+
+    $normalized = mb_strtolower($username);
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $pdo = ds_pdo();
+
+    $stmt = $pdo->prepare('SELECT id FROM admins WHERE username = ?');
+    $stmt->execute([$normalized]);
+    $existing = $stmt->fetch();
+
+    if ($existing) {
+        $pdo->prepare('UPDATE admins SET password_hash = ? WHERE id = ?')->execute([$hash, $existing['id']]);
+        $pdo->prepare('DELETE FROM sessions WHERE admin_id = ?')->execute([$existing['id']]);
+        echo json_encode(['ok' => true, 'action' => 'password_reset', 'username' => $normalized]);
+    } else {
+        $id = ds_uuid4();
+        $pdo->prepare('INSERT INTO admins (id, username, password_hash, created_at) VALUES (?, ?, ?, ?)')
+            ->execute([$id, $normalized, $hash, ds_now()]);
+        echo json_encode(['ok' => true, 'action' => 'created', 'username' => $normalized]);
+    }
+}

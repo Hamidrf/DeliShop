@@ -67,6 +67,7 @@ $routes = [
     ['POST', '#^/auth/login$#', 'ds_route_auth_login'],
     ['POST', '#^/auth/logout$#', 'ds_route_auth_logout'],
     ['GET', '#^/auth/me$#', 'ds_route_auth_me'],
+    ['POST', '#^/setup/create-admin$#', 'ds_route_setup_create_admin'],
     ['GET', '#^/studio/products$#', 'ds_route_studio_products_list'],
     ['POST', '#^/studio/products$#', 'ds_route_studio_products_create'],
     ['DELETE', '#^/studio/products/([^/]+)$#', 'ds_route_studio_products_delete'],
