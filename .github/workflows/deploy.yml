@@ -1,0 +1,55 @@
+name: Build and deploy to cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Build
+        working-directory: app
+        run: npm run build
+
+      - name: Add cPanel deployment config
+        run: |
+          cat > app/dist/.cpanel.yml <<'EOF'
+          ---
+          deployment:
+            tasks:
+              - export DEPLOYPATH=/home/deliar/public_html/
+              - /bin/cp -R * $DEPLOYPATH
+          EOF
+
+      - name: Publish build output to deploy branch
+        working-directory: app/dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q
+          git checkout -q -b deploy
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy build from ${{ github.sha }}"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push -f origin deploy
