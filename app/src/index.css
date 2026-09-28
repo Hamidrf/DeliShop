@@ -45,6 +45,7 @@ img { max-width: none; }
   60% { transform: scale(.92) rotate(-10deg); opacity: 1 }
   100% { transform: scale(1) rotate(-14deg) }
 }
+@keyframes loaderBounce { 0%, 100% { transform: translateY(0) } 40% { transform: translateY(-10px) } }
 
 /* ---------- page shell ---------- */
 .page {
@@ -92,6 +93,22 @@ a.logo:hover { color: var(--ink); }
   box-shadow: 3px 3px 0 var(--ink);
 }
 button.pill { cursor: pointer; }
+
+/* ---------- page loader ---------- */
+.loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; min-height: 100vh; }
+.loader-mark {
+  border-radius: 14px;
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(-2deg);
+  animation: tilt 1.2s ease-in-out infinite;
+}
+.loader-dots { display: flex; gap: 8px; }
+.loader-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); animation: loaderBounce .9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .loader-mark, .loader-dot { animation: none; }
+}
+
 .studio-badge {
   height: 34px;
   padding: 0 14px;

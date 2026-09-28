@@ -1,27 +1,33 @@
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { PageLoader } from './components/PageLoader';
 import { RequireLogin } from './components/RequireLogin';
 import './index.css';
-import Admin from './pages/Admin';
-import Checkout from './pages/Checkout';
-import Inventory from './pages/Inventory';
-import Login from './pages/Login';
-import Shop from './pages/shop/Shop';
+
+// Lazily loaded so PageLoader's childlike bounce shows while each page's code loads,
+// instead of shipping every page in the first bundle.
+const Shop = lazy(() => import('./pages/shop/Shop'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Login = lazy(() => import('./pages/Login'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Inventory = lazy(() => import('./pages/Inventory'));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Shop />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/studio/login" element={<Login />} />
-        <Route element={<RequireLogin />}>
-          <Route path="/studio" element={<Admin />} />
-          <Route path="/studio/products" element={<Inventory />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Shop />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/studio/login" element={<Login />} />
+          <Route element={<RequireLogin />}>
+            <Route path="/studio" element={<Admin />} />
+            <Route path="/studio/products" element={<Inventory />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   </StrictMode>,
 );
