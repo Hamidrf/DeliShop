@@ -1,58 +1,116 @@
-# Deploying DeliShop to deliarte.ir (cPanel)
+# Deploying DeliShop to Liara
 
-## Architecture
+The full stack (frontend + backend) is now one Node.js app on **Liara**,
+matching `docs/backend-architecture.md`. It answers `/api/*` and also serves
+the built React app (`app/dist`) from the same origin — no CORS, no separate
+static host.
 
-`app/` is a Vite + React + TypeScript app. The shared cPanel host has no
-Node.js support (only PHP), so the app cannot be built on the server. Instead:
+The previous cPanel-only static deploy (frontend on `deliarte.ir` via
+cPanel Git Version Control) is retired. `deliarte.ir` will point at Liara
+instead once DNS is switched (last step below). The cPanel hosting account
+itself isn't deleted — it's just no longer used for this site unless you
+want to repurpose it (e.g. email).
 
-1. `.github/workflows/deploy.yml` builds the app on every push to `main` and
-   force-pushes the built static output (`app/dist`) to a `deploy` branch,
-   together with a `.cpanel.yml` that tells cPanel where to copy the files.
-2. cPanel's **Git™ Version Control** clones the `deploy` branch and, on
-   deploy, copies its contents into the site's document root.
+## What's already wired in the repo
 
-## Hosting details on record
+- `package.json` (root) — `npm run build` builds `app/` then `server/`;
+  `npm start` runs `node server/dist/index.js`, which serves both the API
+  and `app/dist`.
+- `liara.json` — `{ "platform": "node", "app": "delishop", "port": 3000 }`.
+  **Rename `"app"` to whatever you actually name the app when you create it
+  on Liara** (see step 2 below) — it must match exactly.
+- `.github/workflows/ci.yml` — on every push/PR: typecheck, lint, test
+  (against a throwaway Postgres service container), build both projects.
+  On push to `main` only, after that passes: runs `drizzle-kit migrate`
+  against production, then `liara deploy` via `liara-cloud/liara-cli-action@v2`.
 
-- cPanel user: `deliar` (home: `/home/deliar`)
-- Primary domain: `deliarte.ir`, document root: `/home/deliar/public_html`
-- Shared IP: `130.185.76.122`
-- DNS: `deliarte.ir` and `www.deliarte.ir` A records already point to the
-  host IP — no DNS changes needed.
-- SSL: already active on the domain.
+I haven't tested this against a real Liara account (no access to one from
+here), so treat the first deploy as a dry run — if `liara deploy` fails,
+send me the Actions log and I'll adjust `liara.json`/the workflow.
 
-## One-time setup in cPanel (manual — needs your login)
+## 1. Create a Liara account
 
-1. Open **Git™ Version Control** → **Create**.
-2. **Clone URL**: `https://github.com/Hamidrf/DeliShop.git`
-   - The repo must be public, or cPanel needs credentials. If it's private,
-     use a GitHub Personal Access Token with read-only repo access in the
-     clone URL (`https://<token>@github.com/Hamidrf/DeliShop.git`).
-3. **Repository Path**: e.g. `/home/deliar/repositories/delishop`
-4. **Branch to clone**: `deploy` (not `main` — `main` has source code, not
-   the built site).
-5. Click **Create**.
-6. Go to the **Pull or Deploy** tab for this repository and click
-   **Deploy HEAD Commit** once, to do the first copy into `public_html`.
+If you don't have one: https://console.liara.ir (Rial billing, Iranian card).
 
-> Before the first deploy, back up or clear out anything currently in
-> `/home/deliar/public_html` that you don't want kept — the deploy task
-> copies files in but does not delete existing ones.
+## 2. Create the three resources
 
-## Ongoing deploys
+In the Liara console:
 
-Right now, pushing to `main` rebuilds and updates the `deploy` branch
-automatically, but cPanel does **not** auto-pull — you still need to click
-**Update from Remote** then **Deploy HEAD Commit** in the Pull or Deploy tab
-after each push.
+1. **App** → New App → platform **Node.js** → pick a name (e.g. `delishop`).
+   Don't push code yet from the console — GitHub Actions will do it.
+2. **Database** → New Database → **PostgreSQL** (smallest plan is enough for
+   this traffic). Copy its connection string once created.
+3. **Object Storage** → New bucket. Create two: one for public media
+   (product/painting photos) and one for private receipts — or one bucket
+   with both, if you'd rather keep it simple for now. Note the endpoint,
+   access key, secret key, and bucket name(s).
 
-Optional next step: fully automate this by adding a step at the end of the
-GitHub Action that calls cPanel's API (`UAPI VersionControl` pull + deploy)
-using a cPanel API token stored as a GitHub Actions secret. Ask if you want
-this set up.
+## 3. Generate an API token
+
+Liara console → your account/team settings → **API Tokens** → create one
+with deploy access. This is the `LIARA_API_TOKEN`.
+
+## 4. Add GitHub repo secrets
+
+In `github.com/Hamidrf/DeliShop` → Settings → Secrets and variables →
+Actions → New repository secret:
+
+- `LIARA_API_TOKEN` — the token from step 3
+- `DATABASE_URL` — the Postgres connection string from step 2 (used by CI
+  to run migrations before each deploy)
+
+## 5. Set the app's own environment variables
+
+These go in the Liara console, on the **app itself** (Settings →
+Environment Variables) — not GitHub secrets, since the running app reads
+them directly:
+
+```
+NODE_ENV=production
+PORT=3000
+APP_ORIGIN=https://deliarte.ir
+DATABASE_URL=<same Postgres connection string as above>
+STORAGE_DRIVER=s3
+S3_ENDPOINT=<from your Liara Object Storage bucket>
+S3_REGION=default
+S3_ACCESS_KEY_ID=<from Object Storage>
+S3_SECRET_ACCESS_KEY=<from Object Storage>
+S3_MEDIA_BUCKET=<your media bucket name>
+S3_RECEIPTS_BUCKET=<your receipts bucket name>
+MEDIA_PUBLIC_BASE_URL=<public URL of the media bucket>
+SMS_API_KEY=            (optional — leave blank for now)
+OWNER_PHONE=            (optional — leave blank for now)
+```
+
+## 6. Rename `liara.json` to match your app name, then push
+
+If you named the app anything other than `delishop` in step 2, tell me the
+name and I'll update `liara.json` and push — or edit it yourself:
+
+```json
+{ "platform": "node", "app": "YOUR-APP-NAME", "port": 3000 }
+```
+
+Once secrets are in place (step 4) and this matches, the next push to
+`main` (or re-running the workflow) triggers the first real deploy.
+
+## 7. Point deliarte.ir at Liara
+
+In the Liara console, add `deliarte.ir` (and `www.deliarte.ir`) as a custom
+domain on the app — it'll show you the exact DNS record to add (usually a
+CNAME to something like `your-app.liara.run`, sometimes an A record to a
+static IP; Liara's UI states which for your app). Add that record in
+wherever `deliarte.ir`'s DNS is managed (same place the current A record
+to `130.185.76.122` lives) and remove the old A record once Liara's
+domain check goes green. Liara issues its own TLS certificate for the
+domain automatically.
 
 ## Still needed from you
 
-- Merge this branch's changes into `main` (the workflow only triggers on
-  pushes to `main`).
-- Confirm whether `Hamidrf/DeliShop` is public or private, so we know if a
-  token is needed for the cPanel clone URL.
+- Create the app/database/storage on Liara (steps 1–2) and tell me the app
+  name if it's not `delishop`.
+- Add the two GitHub secrets (step 4).
+- Set the app's environment variables on Liara (step 5) — the Object
+  Storage and Postgres values come from what you provisioned in step 2.
+- Once that's done, tell me and I'll watch the next deploy run and fix
+  anything that comes up.
