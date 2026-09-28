@@ -1,23 +1,37 @@
 <?php
 declare(strict_types=1);
 
-/** Recursively copies $src's contents into $dst, overwriting existing files. Returns the number of files copied. */
-function ds_recursive_copy(string $src, string $dst): int
+/**
+ * Recursively copies $src's contents into $dst, overwriting existing files.
+ * Returns ['copied' => int, 'failed' => list<string>] -- copy()'s return
+ * value was previously ignored entirely (the count was incremented
+ * regardless of success), so a silent copy() failure -- e.g. a file the
+ * web server user can't overwrite for whatever host-specific reason --
+ * was reported as a successful deploy with no way to tell. Confirmed
+ * this can happen in practice: files_copied stayed a plausible-looking
+ * number across several deploys while a specific PHP file never actually
+ * changed on disk.
+ */
+function ds_recursive_copy(string $src, string $dst): array
 {
-    $count = 0;
+    $copied = 0;
+    $failed = [];
     if (!is_dir($dst)) mkdir($dst, 0775, true);
     foreach (scandir($src) as $item) {
         if ($item === '.' || $item === '..') continue;
         $srcPath = $src . '/' . $item;
         $dstPath = $dst . '/' . $item;
         if (is_dir($srcPath)) {
-            $count += ds_recursive_copy($srcPath, $dstPath);
+            $sub = ds_recursive_copy($srcPath, $dstPath);
+            $copied += $sub['copied'];
+            $failed = array_merge($failed, $sub['failed']);
+        } elseif (copy($srcPath, $dstPath)) {
+            $copied++;
         } else {
-            copy($srcPath, $dstPath);
-            $count++;
+            $failed[] = $dstPath;
         }
     }
-    return $count;
+    return ['copied' => $copied, 'failed' => $failed];
 }
 
 function ds_recursive_delete(string $dir): void
@@ -107,17 +121,20 @@ function ds_self_deploy(?string $sha = null): array
     // this file is at public_html/api/lib/self_deploy.php -- two levels up is public_html
     $destRoot = dirname(__DIR__, 2);
 
-    $copied = ds_recursive_copy($sourceRoot, $destRoot);
+    $copyResult = ds_recursive_copy($sourceRoot, $destRoot);
     ds_recursive_delete($extractDir);
 
     // Some hosts run opcache with validate_timestamps off (or a slow
     // revalidate interval), so an updated PHP file on disk doesn't take
     // effect until the cached bytecode for it is explicitly dropped.
-    // Confirmed necessary on this host: identical input processed
-    // identically by lib/uploads.php across multiple deploys that changed
-    // that exact code path. Included in the response so a deploy's logs
-    // show whether this ran.
+    // Included in the response so a deploy's logs show whether this ran.
     $opcacheReset = function_exists('opcache_reset') ? opcache_reset() : null;
 
-    return ['files_copied' => $copied, 'dest' => $destRoot, 'opcache_reset' => $opcacheReset, 'fetched_ref' => $ref];
+    return [
+        'files_copied' => $copyResult['copied'],
+        'files_failed' => $copyResult['failed'],
+        'dest' => $destRoot,
+        'opcache_reset' => $opcacheReset,
+        'fetched_ref' => $ref,
+    ];
 }
