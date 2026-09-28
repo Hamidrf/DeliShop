@@ -80,3 +80,13 @@ jobs:
           git commit -q -m "Deploy build from ${{ github.sha }}"
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           git push -f origin deploy
+
+      - name: Trigger self-deploy on the live host
+        continue-on-error: true
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          curl -sS -X POST https://deliarte.ir/api/setup/self-deploy \
+            -H "Content-Type: application/json" \
+            -d "{\"token\":\"${DEPLOY_TOKEN}\"}" \
+            --fail-with-body

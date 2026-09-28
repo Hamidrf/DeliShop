@@ -32,6 +32,7 @@ function ds_config(): array
         'owner_phone' => getenv('OWNER_PHONE') ?: '',
         'sms_api_key' => getenv('SMS_API_KEY') ?: '',
         'setup_token' => getenv('SETUP_TOKEN') ?: '',
+        'deploy_token' => getenv('DEPLOY_TOKEN') ?: '',
     ];
     return $config;
 }

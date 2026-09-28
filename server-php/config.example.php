@@ -29,10 +29,17 @@ return [
     'owner_phone' => '',
     'sms_api_key' => '',
 
-    // Lets POST /api/setup/create-admin create or reset an admin account
-    // over HTTP -- for hosts with no Terminal/SSH access, where
-    // scripts/create_admin.php can't be run directly. Leave blank to
-    // disable that route entirely (recommended once you no longer need it:
-    // set this back to '' and redeploy).
+    // Lets POST /api/setup/create-admin and /api/setup/seed run over HTTP --
+    // for hosts with no Terminal/SSH access. Leave blank to disable both
+    // routes entirely (recommended once you no longer need them: set this
+    // back to '' after the initial setup).
     'setup_token' => '',
+
+    // Separate, PERMANENT secret for POST /api/setup/self-deploy, which
+    // downloads the latest `deploy` branch build from GitHub and copies it
+    // over this site -- see lib/self_deploy.php. Unlike setup_token, this
+    // one is meant to stay set: .github/workflows/ci.yml calls this route
+    // after every push to main. Generate a long random value and also add
+    // it as the DEPLOY_TOKEN secret in the GitHub repo's settings.
+    'deploy_token' => '',
 ];
