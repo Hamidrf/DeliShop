@@ -27,7 +27,6 @@ function CardArt({ p }: { p: Product }) {
           className="card-art-img"
           style={{
             ...cropStyle(p),
-            mixBlendMode: 'multiply',
             filter: `grayscale(var(--art-gray, 1)) ${p.photo ? 'contrast(1.35) brightness(1.12) saturate(1.2)' : 'contrast(1.25) brightness(1.08)'}`,
           }}
         />
