@@ -10,6 +10,10 @@
 --     check and the insert, acceptable for this single-admin, low-traffic app.
 --   - Times are stored as DATETIME(3) in UTC (no tz-aware type in MySQL);
 --     the application always reads/writes them as UTC.
+--   - No CHECK constraints: some shared-hosting MySQL/phpMyAdmin setups choke
+--     on the `CONSTRAINT ... CHECK (...)` syntax. price > 0 and quantity
+--     1-20 are validated in application code anyway (routes/orders.php,
+--     routes/studio_products.php), so nothing relies on these at the DB level.
 
 SET NAMES utf8mb4;
 
@@ -50,8 +54,7 @@ CREATE TABLE products (
   created_at DATETIME(3) NOT NULL,
   updated_at DATETIME(3) NOT NULL,
   KEY products_position_idx (position),
-  KEY products_archived_at_idx (archived_at),
-  CONSTRAINT products_price_check CHECK (price > 0)
+  KEY products_archived_at_idx (archived_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE orders (
@@ -81,8 +84,7 @@ CREATE TABLE order_items (
   quantity INT NOT NULL,
   KEY order_items_order_id_idx (order_id),
   CONSTRAINT order_items_order_id_fk FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
-  CONSTRAINT order_items_product_id_fk FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE SET NULL,
-  CONSTRAINT order_items_quantity_check CHECK (quantity BETWEEN 1 AND 20)
+  CONSTRAINT order_items_product_id_fk FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE rate_limits (
