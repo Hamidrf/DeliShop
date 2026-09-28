@@ -100,6 +100,57 @@ function ds_route_setup_create_admin(): void
 }
 
 /**
+ * TEMPORARY: checks whether this PHP process can reach GitHub over HTTPS,
+ * to find out whether a self-pull deploy script (run via cPanel Cron Job)
+ * is viable, since cPanel's own Git Version Control can't reach GitHub from
+ * this host. Same setup_token gate. Remove once this question is settled.
+ */
+function ds_route_setup_connectivity_check(): void
+{
+    $c = ds_config();
+    $configuredToken = $c['setup_token'] ?? '';
+    if ($configuredToken === '') throw ds_not_found();
+
+    $body = ds_json_body();
+    $token = is_array($body) && isset($body['token']) && is_string($body['token']) ? $body['token'] : '';
+    if (!hash_equals($configuredToken, $token)) throw ds_not_found();
+
+    $targets = [
+        'api.github.com' => 'https://api.github.com',
+        'codeload.github.com' => 'https://codeload.github.com/Hamidrf/DeliShop/zip/refs/heads/deploy',
+    ];
+    $results = ['curl_available' => function_exists('curl_init')];
+
+    foreach ($targets as $name => $url) {
+        $entry = ['url' => $url];
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_NOBODY => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 8,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+            curl_exec($ch);
+            $entry['http_code'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $entry['error'] = curl_error($ch) ?: null;
+            $entry['total_time_s'] = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+            curl_close($ch);
+        } else {
+            $ctx = stream_context_create(['http' => ['method' => 'HEAD', 'timeout' => 10]]);
+            $ok = @file_get_contents($url, false, $ctx);
+            $entry['ok'] = $ok !== false;
+            $entry['headers'] = $http_response_header ?? null;
+        }
+        $results[$name] = $entry;
+    }
+
+    echo json_encode($results);
+}
+
+/**
  * HTTP equivalent of scripts/seed.php, for hosts with no Terminal/SSH
  * access. Same setup_token gate as ds_route_setup_create_admin(). Loads the
  * 16 original products only if the products table is currently empty.
