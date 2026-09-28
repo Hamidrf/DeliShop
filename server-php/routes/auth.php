@@ -118,7 +118,8 @@ function ds_route_setup_self_deploy(): void
     $token = is_array($body) && isset($body['token']) && is_string($body['token']) ? $body['token'] : '';
     if (!hash_equals($configuredToken, $token)) throw ds_not_found();
 
-    $result = ds_self_deploy();
+    $sha = is_array($body) && isset($body['sha']) && is_string($body['sha']) ? $body['sha'] : null;
+    $result = ds_self_deploy($sha);
     echo json_encode(array_merge(['ok' => true], $result));
 }
 
