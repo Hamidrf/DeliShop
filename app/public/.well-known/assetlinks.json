@@ -6,5 +6,13 @@
       "package_name": "ir.deliarte.delishop",
       "sha256_cert_fingerprints": ["37:7C:B8:7F:7A:C6:A3:45:3D:F5:37:03:B8:20:0E:BF:E3:BA:9E:1D:B9:1C:64:F0:5D:83:5B:87:C5:4D:80:B2"]
     }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "cafebazaar_twa",
+      "package_name": "ir.deliarte.delishop",
+      "sha256_cert_fingerprints": ["37:7C:B8:7F:7A:C6:A3:45:3D:F5:37:03:B8:20:0E:BF:E3:BA:9E:1D:B9:1C:64:F0:5D:83:5B:87:C5:4D:80:B2"]
+    }
   }
 ]
