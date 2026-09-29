@@ -57,3 +57,5 @@ Note: `deliarte.ir` may be unreachable from outside Iran, so `bubblewrap init` f
 foreign machine can fail; use `bubblewrap update` with `android/twa-manifest.json`.
 On devices without Chrome (common with Bazaar-only phones) the app falls back to Custom Tabs
 (`fallbackType`), which shows a browser bar.
+
+Bazaar's TWA validator additionally requires a second statement in `assetlinks.json` with `"namespace": "cafebazaar_twa"` (same package + fingerprint). Keep both statements.
