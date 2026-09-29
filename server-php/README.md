@@ -18,6 +18,7 @@ server.
 ```sh
 mysql -u root -e "CREATE DATABASE delishop_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 mysql -u root delishop_dev < migrations/001_init.sql
+mysql -u root delishop_dev < migrations/002_product_photos.sql
 
 export DB_HOST=127.0.0.1
 export DB_NAME=delishop_dev
@@ -64,6 +65,10 @@ server-php/
                         authenticated receipt route)
     uploads.php         File-type sniffing + image processing (Imagick, falls back to GD)
     uploads_extra.php   Re-encode-only helper, used by lib/seed_data.php
+    product_photos.php  A product's photo keys (fetch/save), shared by
+                        routes/studio_products.php, lib/serialize.php and
+                        lib/seed_data.php -- kept out of routes/ so
+                        scripts/seed.php (CLI, doesn't load routes/) can use it
     seed_data.php        The 16 original products + ds_run_seed(), shared by
                         scripts/seed.php and the POST /api/setup/seed route
     self_deploy.php       Downloads+extracts the `deploy` branch zip and copies it over
@@ -80,6 +85,8 @@ server-php/
                         web access via .htaccess and their own php_sapi_name() check
   migrations/001_init.sql   MySQL schema (see its header comment for the differences
                         from the original PostgreSQL schema)
+  migrations/002_product_photos.sql   Adds the product_photos table (multiple
+                        photos per product), drops products.photo_key
   .htaccess             Denies direct HTTP access to everything except index.php
   router.php             Dev-only, for `php -S` (see "Local setup" above) -- not used
                         in production, where Apache's own .htaccess does this job

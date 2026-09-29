@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/uploads_extra.php';
+require_once __DIR__ . '/product_photos.php';
 
 /** The 16 original products, ported 1:1 from server/src/scripts/seed.ts. */
 function ds_seed_definitions(): array
@@ -112,14 +113,15 @@ function ds_run_seed(): array
         $id = ds_uuid4();
         $now = ds_now();
         $stmt = $pdo->prepare(
-            'INSERT INTO products (id, name, category, color, price, story, drawing_key, drawing_width, drawing_height, drawing_crop, photo_key, position, archived_at, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)'
+            'INSERT INTO products (id, name, category, color, price, story, drawing_key, drawing_width, drawing_height, drawing_crop, position, archived_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)'
         );
         $stmt->execute([
             $id, $seed['name'], $seed['category'], $seed['color'], $seed['price'], $seed['story'],
             $drawing['key'], $drawing['width'], $drawing['height'], json_encode($seed['crop']),
-            $photoKey, $index + 1, $now, $now,
+            $index + 1, $now, $now,
         ]);
+        if ($photoKey !== null) ds_save_product_photos($id, [$photoKey], $now);
         $seeded[] = $seed['name'];
     }
 

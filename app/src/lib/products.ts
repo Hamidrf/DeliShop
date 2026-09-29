@@ -20,7 +20,11 @@ export interface Product extends Crop {
   price: number;
   cat: Category;
   bg: BgKey;
-  /** Real product photo with a transparent background, if we have one. */
+  /** Real product photos with a transparent background, if there are any — shown as a slider. */
+  photos: string[];
+  /** The same photos' raw storage keys, in the same order — only present from `/studio/products`, used by the edit form to say which existing photos to keep. */
+  photoKeys: string[];
+  /** The first real photo, if there is one — what a single-image spot (thumbnails, the hand/ear/bag stage) shows. */
   real: string | null;
   story: string;
   voice: string | null;
@@ -41,7 +45,9 @@ export interface ApiProduct {
     height: number;
     crop: { x: number; y: number; w: number; h: number; clip: string } | null;
   };
-  photoUrl: string | null;
+  photos: string[];
+  /** Only present from `/studio/products` — see `Product.photoKeys`. */
+  photoKeys?: string[];
   voiceUrl: string | null;
 }
 
@@ -53,7 +59,9 @@ export function productFromApi(p: ApiProduct): Product {
     price: p.price,
     cat: p.category,
     bg: p.color,
-    real: p.photoUrl,
+    photos: p.photos,
+    photoKeys: p.photoKeys ?? [],
+    real: p.photos[0] ?? null,
     story: p.story,
     voice: p.voiceUrl,
     custom: false,

@@ -42,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/studio/login" element={<Login />} />
             <Route path="/studio" element={<RequireLogin><Admin /></RequireLogin>} />
+            <Route path="/studio/edit/:id" element={<RequireLogin><Admin /></RequireLogin>} />
             <Route path="/studio/products" element={<RequireLogin><Inventory /></RequireLogin>} />
             <Route path="/studio/orders" element={<RequireLogin><Orders /></RequireLogin>} />
             <Route path="*" element={<Navigate to="/" replace />} />

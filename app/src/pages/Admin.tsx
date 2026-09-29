@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { StudioHeader } from '../components/StudioHeader';
 import { ApiError, api } from '../lib/api';
+import type { Product } from '../lib/products';
 import { queryClient } from '../lib/queryClient';
 import { useCatalog } from '../lib/store';
 import { CATEGORIES, CAT_COLOR, COLORS, INK, bgImage, colorOf, type BgKey, type Category } from '../lib/theme';
 import './Admin.css';
 
+const MAX_PHOTOS = 6;
+
 interface Img { blob: Blob; url: string; w: number; h: number }
+/** An existing photo, already on the product, kept unless the studio user removes it. */
+interface ExistingPhoto { key: string; url: string }
 
 /** Loads an image file, shrinks it to fit `max` px and re-encodes it as a Blob. */
 function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') {
@@ -38,15 +44,46 @@ function fileToImage(file: File, max: number, type: 'image/jpeg' | 'image/png') 
 }
 
 export default function Admin() {
-  const shopCount = useCatalog('shop').length;
+  const { id: editId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const shop = useCatalog('shop');
+  const studio = useCatalog('studio');
+  const editing = studio.find(p => p.id === editId);
 
-  const [name, setName] = useState('');
-  const [cat, setCat] = useState<Category>('Keychains');
-  const [bg, setBg] = useState<BgKey>('pink');
-  const [drawing, setDrawing] = useState<Img | null>(null);
-  const [photo, setPhoto] = useState<Img | null>(null);
-  const [price, setPrice] = useState('');
-  const [story, setStory] = useState('');
+  if (editId && studio.length && !editing) {
+    // Bad or archived id (studio catalog loaded, product not in it).
+    navigate('/studio/products', { replace: true });
+    return null;
+  }
+  if (editId && !editing) {
+    // Studio catalog for the edit form hasn't loaded yet.
+    return (
+      <div className="page"><div className="page-inner adm">
+        <StudioHeader links={[{ to: '/studio/products', label: 'All products' }, { to: '/studio/orders', label: 'Orders' }, { to: '/', label: 'View shop →' }]} />
+        <span className="hand" style={{ fontSize: 24, color: 'var(--faint)' }}>Loading…</span>
+      </div></div>
+    );
+  }
+
+  return <AdminForm key={editId ?? 'new'} shopCount={shop.length} editing={editing} />;
+}
+
+function AdminForm({ shopCount, editing }: { shopCount: number; editing: Product | undefined }) {
+  const navigate = useNavigate();
+  const isEdit = !!editing;
+
+  const [name, setName] = useState(editing?.name ?? '');
+  const [cat, setCat] = useState<Category>(editing?.cat ?? 'Keychains');
+  const [bg, setBg] = useState<BgKey>(editing?.bg ?? 'pink');
+  const [drawingPreview] = useState<string | null>(editing?.src ?? null);
+  const [newDrawing, setNewDrawing] = useState<Img | null>(null);
+  const [existingPhotos, setExistingPhotos] = useState<ExistingPhoto[]>(
+    editing ? editing.photoKeys.map((key, i) => ({ key, url: editing.photos[i] })) : [],
+  );
+  const [newPhotos, setNewPhotos] = useState<Img[]>([]);
+  const [price, setPrice] = useState(editing ? String(editing.price) : '');
+  const [story, setStory] = useState(editing?.story ?? '');
+  const [existingVoiceUrl, setExistingVoiceUrl] = useState<string | null>(editing?.voice ?? null);
   const [voice, setVoice] = useState<{ blob: Blob; url: string } | null>(null);
   const [msg, setMsg] = useState<{ text: string; ok: boolean }>({ text: '', ok: true });
   const [saving, setSaving] = useState(false);
@@ -68,8 +105,19 @@ export default function Admin() {
   };
   useEffect(() => stopRec, []);
 
-  const pickDrawing = async (f?: File) => { if (f) { setDrawing(await fileToImage(f, 1000, 'image/png')); setMsg({ text: '', ok: true }); } };
-  const pickPhoto = async (f?: File) => { if (f) { setPhoto(await fileToImage(f, 800, 'image/png')); setMsg({ text: '', ok: true }); } };
+  const photoCount = existingPhotos.length + newPhotos.length;
+
+  const pickDrawing = async (f?: File) => { if (f) { setNewDrawing(await fileToImage(f, 1000, 'image/png')); setMsg({ text: '', ok: true }); } };
+  const pickPhotos = async (files: FileList | File[] | undefined) => {
+    if (!files || !files.length) return;
+    const room = MAX_PHOTOS - photoCount;
+    if (room <= 0) { setMsg({ text: `Up to ${MAX_PHOTOS} photos per product.`, ok: false }); return; }
+    const picked = await Promise.all(Array.from(files).slice(0, room).map(f => fileToImage(f, 800, 'image/png')));
+    setNewPhotos(p => [...p, ...picked]);
+    setMsg({ text: '', ok: true });
+  };
+  const removeExistingPhoto = (key: string) => setExistingPhotos(p => p.filter(x => x.key !== key));
+  const removeNewPhoto = (url: string) => setNewPhotos(p => p.filter(x => x.url !== url));
   const pickVoice = (f?: File) => { if (f) { setVoice({ blob: f, url: URL.createObjectURL(f) }); setMsg({ text: '', ok: true }); } };
 
   const toggleRecord = async () => {
@@ -96,8 +144,8 @@ export default function Admin() {
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    const missing = [!name.trim() && 'name', !drawing && 'drawing', !(Number(price) > 0) && 'price'].filter(Boolean);
-    if (missing.length || !drawing) { setMsg({ text: 'Missing: ' + missing.join(', '), ok: false }); return; }
+    const missing = [!name.trim() && 'name', !(isEdit || newDrawing) && 'drawing', !(Number(price) > 0) && 'price'].filter(Boolean);
+    if (missing.length) { setMsg({ text: 'Missing: ' + missing.join(', '), ok: false }); return; }
 
     const form = new FormData();
     form.set('name', name.trim());
@@ -105,16 +153,23 @@ export default function Admin() {
     form.set('color', bg);
     form.set('price', price);
     form.set('story', story.trim());
-    form.set('drawing', drawing.blob, 'drawing.png');
-    if (photo) form.set('photo', photo.blob, 'photo.png');
+    if (newDrawing) form.set('drawing', newDrawing.blob, 'drawing.png');
+    for (const p of newPhotos) form.append('photos[]', p.blob, 'photo.png');
+    if (isEdit) form.set('keepPhotoKeys', JSON.stringify(existingPhotos.map(p => p.key)));
+    if (isEdit && !existingVoiceUrl && !voice) form.set('removeVoice', 'true');
     if (voice) form.set('voice', voice.blob, 'voice.webm');
 
     setSaving(true);
     try {
-      const { product } = await api.postForm<{ product: { name: string } }>('/studio/products', form);
+      const path = isEdit ? `/studio/products/${editing!.id}` : '/studio/products';
+      const { product } = await api.postForm<{ product: { name: string } }>(path, form);
       await queryClient.invalidateQueries({ queryKey: ['products'] });
       await queryClient.invalidateQueries({ queryKey: ['studio', 'products'] });
-      setName(''); setCat('Keychains'); setBg('pink'); setDrawing(null); setPhoto(null); setPrice(''); setStory(''); setVoice(null);
+      if (isEdit) {
+        navigate('/studio/products');
+        return;
+      }
+      setName(''); setCat('Keychains'); setBg('pink'); setNewDrawing(null); setNewPhotos([]); setPrice(''); setStory(''); setVoice(null);
       setMsg({ text: product.name + ' is in the shop!', ok: true });
     } catch (err) {
       setMsg({ text: err instanceof ApiError ? err.message : 'Could not save. Try again.', ok: false });
@@ -123,8 +178,9 @@ export default function Admin() {
     }
   };
 
-  const drop = (fn: (f?: File) => void) => (e: DragEvent) => { e.preventDefault(); fn(e.dataTransfer.files[0]); };
+  const drop = (fn: (f?: FileList) => void) => (e: DragEvent) => { e.preventDefault(); fn(e.dataTransfer.files); };
   const mm = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+  const drawingUrl = newDrawing?.url ?? drawingPreview;
 
   return (
     <div className="page">
@@ -133,7 +189,7 @@ export default function Admin() {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'flex-start' }}>
           <form className="form-card adm-form" onSubmit={save} noValidate>
-            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, lineHeight: 1 }}>New product</h1>
+            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, lineHeight: 1 }}>{isEdit ? 'Edit product' : 'New product'}</h1>
 
             <label className="adm-field">
               <span>Name</span>
@@ -182,50 +238,67 @@ export default function Admin() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
-              <div className="adm-field">
-                <span>Drawing</span>
-                <div
-                  className="dropzone adm-drop"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Choose the drawing"
-                  onClick={() => drawRef.current?.click()}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drawRef.current?.click(); } }}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={drop(pickDrawing)}
-                >
-                  {drawing ? <img src={drawing.url} alt="Drawing" className="adm-drop-img" /> : (
-                    <div className="adm-drop-empty">
-                      <span style={{ fontSize: 40, lineHeight: 1 }}>✎</span>
-                      <span className="hand">Drop the kid's drawing</span>
-                    </div>
-                  )}
-                </div>
-                <input ref={drawRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { pickDrawing(e.target.files?.[0]); e.target.value = ''; }} />
+            <div className="adm-field">
+              <span>Drawing</span>
+              <div
+                className="dropzone adm-drop"
+                role="button"
+                tabIndex={0}
+                aria-label="Choose the drawing"
+                onClick={() => drawRef.current?.click()}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drawRef.current?.click(); } }}
+                onDragOver={e => e.preventDefault()}
+                onDrop={drop(files => pickDrawing(files?.[0]))}
+              >
+                {drawingUrl ? <img src={drawingUrl} alt="Drawing" className="adm-drop-img" /> : (
+                  <div className="adm-drop-empty">
+                    <span style={{ fontSize: 40, lineHeight: 1 }}>✎</span>
+                    <span className="hand">Drop the kid's drawing</span>
+                  </div>
+                )}
               </div>
+              <input ref={drawRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { pickDrawing(e.target.files?.[0]); e.target.value = ''; }} />
+            </div>
 
-              <div className="adm-field">
-                <span>Product photo</span>
+            <div className="adm-field">
+              <span>Product photos {photoCount > 0 && <span style={{ opacity: .6 }}>({photoCount}/{MAX_PHOTOS})</span>}</span>
+              {(existingPhotos.length > 0 || newPhotos.length > 0) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {existingPhotos.map(p => (
+                    <div key={p.key} className="adm-row">
+                      <div className="adm-row-thumb"><img src={p.url} alt="" /></div>
+                      <span className="adm-row-name" style={{ flex: 1 }}>Photo</span>
+                      <button type="button" className="adm-row-del" aria-label="Remove this photo" onClick={() => removeExistingPhoto(p.key)}>✕</button>
+                    </div>
+                  ))}
+                  {newPhotos.map(p => (
+                    <div key={p.url} className="adm-row">
+                      <div className="adm-row-thumb"><img src={p.url} alt="" /></div>
+                      <span className="adm-row-name" style={{ flex: 1 }}>New photo</span>
+                      <button type="button" className="adm-row-del" aria-label="Remove this photo" onClick={() => removeNewPhoto(p.url)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {photoCount < MAX_PHOTOS && (
                 <div
                   className="dropzone adm-drop"
                   role="button"
                   tabIndex={0}
-                  aria-label="Choose the product photo"
+                  aria-label="Add a product photo"
                   onClick={() => photoRef.current?.click()}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); photoRef.current?.click(); } }}
                   onDragOver={e => e.preventDefault()}
-                  onDrop={drop(pickPhoto)}
+                  onDrop={drop(pickPhotos)}
+                  style={{ aspectRatio: 'auto', minHeight: 120 }}
                 >
-                  {photo ? <img src={photo.url} alt="Product photo" className="adm-drop-img" /> : (
-                    <div className="adm-drop-empty">
-                      <span style={{ fontSize: 40, lineHeight: 1 }}>◎</span>
-                      <span className="hand">Drop a photo, no background</span>
-                    </div>
-                  )}
+                  <div className="adm-drop-empty">
+                    <span style={{ fontSize: 40, lineHeight: 1 }}>◎</span>
+                    <span className="hand">Drop photos, no background — a few at once is fine</span>
+                  </div>
                 </div>
-                <input ref={photoRef} type="file" accept="image/png,image/webp,image/*" style={{ display: 'none' }} onChange={e => { pickPhoto(e.target.files?.[0]); e.target.value = ''; }} />
-              </div>
+              )}
+              <input ref={photoRef} type="file" accept="image/png,image/webp,image/*" multiple style={{ display: 'none' }} onChange={e => { void pickPhotos(e.target.files ?? undefined); e.target.value = ''; }} />
             </div>
 
             <label className="adm-field">
@@ -252,21 +325,23 @@ export default function Admin() {
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                 <button type="button" className="adm-btn" onClick={toggleRecord} style={{ padding: '0 20px 0 14px', background: recording ? '#FFE0E5' : '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span className="adm-rec-dot" style={{ borderRadius: recording ? 4 : '50%', animation: recording ? 'blink 1s infinite' : 'none' }} />
-                  <span style={{ whiteSpace: 'pre' }}>{recording ? 'Stop  ' + mm : voice ? 'Record again' : 'Record'}</span>
+                  <span style={{ whiteSpace: 'pre' }}>{recording ? 'Stop  ' + mm : voice || existingVoiceUrl ? 'Record again' : 'Record'}</span>
                 </button>
                 <button type="button" className="adm-btn" onClick={() => voiceRef.current?.click()}>Upload audio</button>
                 <input ref={voiceRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => { pickVoice(e.target.files?.[0]); e.target.value = ''; }} />
               </div>
-              {voice && (
+              {(voice || existingVoiceUrl) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <audio controls src={voice.url} style={{ flex: 1, minWidth: 220, height: 44 }} />
-                  <button type="button" className="adm-remove" onClick={() => setVoice(null)}>Remove</button>
+                  <audio controls src={voice?.url ?? existingVoiceUrl ?? undefined} style={{ flex: 1, minWidth: 220, height: 44 }} />
+                  <button type="button" className="adm-remove" onClick={() => { setVoice(null); setExistingVoiceUrl(null); }}>Remove</button>
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', paddingTop: 4 }}>
-              <button type="submit" className="btn-dark adm-submit press press-pink" disabled={saving}>{saving ? 'Saving…' : 'Add to shop'}</button>
+              <button type="submit" className="btn-dark adm-submit press press-pink" disabled={saving}>
+                {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add to shop'}
+              </button>
               <span className="hand" role="status" style={{ fontSize: 22, color: msg.ok ? '#2E8B57' : '#C8283F' }}>{msg.text}</span>
             </div>
           </form>
@@ -275,9 +350,9 @@ export default function Admin() {
             <span className="hand" style={{ fontSize: 22, color: 'var(--faint)' }}>Preview</span>
             <div className="adm-preview" style={{ backgroundColor: colorOf(bg), backgroundImage: `url(${bgImage(bg)})` }}>
               <div className="adm-preview-art">
-                {drawing && <img src={drawing.url} alt="" />}
+                {drawingUrl && <img src={drawingUrl} alt="" />}
               </div>
-              <div className="card-num">{shopCount + 1}</div>
+              <div className="card-num">{(isEdit ? shopCount : shopCount + 1)}</div>
               <div className="card-label">
                 <span>{price || '0'}t</span>
                 <span>{name || 'Name'}</span>

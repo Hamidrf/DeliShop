@@ -42,6 +42,19 @@
 }
 .inv-card-body { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 18px; }
 .inv-name { font-size: 20px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inv-edit {
+  height: 42px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  font-size: 16px;
+  background: #fff;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
 .inv-del {
   height: 42px;
   padding: 0 16px;

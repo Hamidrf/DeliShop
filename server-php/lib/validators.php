@@ -6,6 +6,7 @@ require_once __DIR__ . '/errors.php';
 const DS_CATEGORIES = ['Keychains', 'Earrings', 'Pins'];
 const DS_COLORS = ['mint', 'pink', 'orange', 'purple', 'yellow', 'green'];
 const DS_ORDER_STATUSES = ['awaiting_review', 'confirmed', 'shipped', 'rejected', 'cancelled'];
+const DS_MAX_PRODUCT_PHOTOS = 6;
 
 /** Which status transitions the studio is allowed to make from a given status. Anything else is final. */
 const DS_ALLOWED_TRANSITIONS = [

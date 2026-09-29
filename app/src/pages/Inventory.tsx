@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { StudioHeader } from '../components/StudioHeader';
 import { Thumb } from '../components/Thumb';
 import type { Product } from '../lib/products';
@@ -76,6 +77,7 @@ export default function Inventory() {
                   <span className="inv-name">{p.name}</span>
                   <span className="hand" style={{ fontSize: 20, color: 'var(--muted)' }}>{p.cat} · {p.price}t</span>
                 </div>
+                <Link to={`/studio/edit/${p.id}`} className="inv-edit" aria-label={`Edit ${p.name}`}>Edit</Link>
                 <button type="button" className="del-btn inv-del" aria-label={`Delete ${p.name}`} onClick={() => setPending(p)}>Delete</button>
               </div>
             </div>

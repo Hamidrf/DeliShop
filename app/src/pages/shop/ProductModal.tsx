@@ -25,6 +25,34 @@ function Art({ p, size }: { p: Product; size: number }) {
   );
 }
 
+/** Swipeable gallery of a product's real photos, shown when there's more than one. */
+function PhotoSlider({ photos }: { photos: string[] }) {
+  const [i, setI] = useState(0);
+  if (photos.length <= 1) return null;
+  const prev = () => setI(v => (v - 1 + photos.length) % photos.length);
+  const next = () => setI(v => (v + 1) % photos.length);
+  return (
+    <div className="pm-slider">
+      <button type="button" className="pm-slider-arrow" aria-label="Previous photo" onClick={prev}>‹</button>
+      <img src={photos[i]} alt="" className="pm-slider-img" />
+      <button type="button" className="pm-slider-arrow" aria-label="Next photo" onClick={next}>›</button>
+      <div className="pm-slider-dots">
+        {photos.map((_, idx) => (
+          <button
+            key={idx}
+            type="button"
+            className="pm-slider-dot"
+            aria-label={`Photo ${idx + 1} of ${photos.length}`}
+            aria-current={idx === i}
+            onClick={() => setI(idx)}
+            style={{ background: idx === i ? INK : '#fff' }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Animated scene: keychains swing from a hand, earrings sway from an ear, pins drop onto a backpack. */
 function Stage({ p }: { p: Product }) {
   if (p.cat !== 'Earrings' && p.cat !== 'Pins') {
@@ -99,6 +127,8 @@ export function ProductModal({ p, num, onClose }: { p: Product; num: number; onC
             <span className="pm-num">{num}</span>
             <h2 id="pm-title" className="pm-name">{p.name}</h2>
           </div>
+
+          <PhotoSlider photos={p.photos} />
 
           <div className="pm-bubble">
             <p className="hand pm-story">{p.story}</p>

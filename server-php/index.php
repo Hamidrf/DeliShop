@@ -74,6 +74,10 @@ $routes = [
     ['POST', '#^/setup/self-deploy$#', 'ds_route_setup_self_deploy'],
     ['GET', '#^/studio/products$#', 'ds_route_studio_products_list'],
     ['POST', '#^/studio/products$#', 'ds_route_studio_products_create'],
+    // POST, not PATCH: this edits with a multipart body (optional new
+    // drawing/photo/voice files), and PHP only populates $_FILES/$_POST for
+    // POST requests -- it never parses a multipart body on PATCH.
+    ['POST', '#^/studio/products/([^/]+)$#', 'ds_route_studio_products_update'],
     ['DELETE', '#^/studio/products/([^/]+)$#', 'ds_route_studio_products_delete'],
     ['POST', '#^/studio/products/([^/]+)/restore$#', 'ds_route_studio_products_restore'],
     ['GET', '#^/studio/orders$#', 'ds_route_studio_orders_list'],

@@ -44,10 +44,19 @@ change the other side to match**, and check every frontend call site
 
 Current routes (all under `/api`): `GET /health`, `GET /products`,
 `POST /orders`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`,
-`GET|POST /studio/products`, `DELETE /studio/products/:id`,
-`POST /studio/products/:id/restore`, `GET /studio/orders`,
-`GET /studio/orders/:id`, `GET /studio/orders/:id/receipt`,
-`PATCH /studio/orders/:id`, plus the setup/deploy routes below.
+`GET|POST /studio/products`, `POST /studio/products/:id` (edit — see note
+below), `DELETE /studio/products/:id`, `POST /studio/products/:id/restore`,
+`GET /studio/orders`, `GET /studio/orders/:id`,
+`GET /studio/orders/:id/receipt`, `PATCH /studio/orders/:id`, plus the
+setup/deploy routes below.
+
+`POST /studio/products/:id` edits a product, not `PATCH`: it's a multipart
+body (optional new drawing/photo files), and PHP only populates
+`$_POST`/`$_FILES` for POST — it never parses a multipart body on PATCH. Its
+`keepPhotoKeys` field (a JSON array of existing photo storage keys, from
+`ds_serialize_studio_product`'s `photoKeys`) says which of the product's
+current photos to keep and in what order; anything not listed is dropped,
+and new `photos[]` files are appended after. See `routes/studio_products.php`.
 
 ## Android app (Google Play)
 
@@ -99,6 +108,12 @@ anywhere else outside that one config file and the GitHub secret.
 - Rate limiting (`lib/rate_limit.php`) is MySQL-backed, fixed-window — not
   in-memory, because a shared-hosting PHP request is a fresh process every
   time (no persistent process to hold state in).
+- A product's real photos live in a `product_photos` child table (0–6 per
+  product, ordered by `position`), not a column on `products` — added in
+  `migrations/002_product_photos.sql`. Migrations aren't applied
+  automatically (no migration runner, no Terminal/SSH on the host): apply a
+  new one by hand in phpMyAdmin **before** pushing code that depends on it,
+  since a push to `main` goes live within seconds — see `server-php/README.md`.
 
 ## Storage: don't break the uploads/receipts split
 
