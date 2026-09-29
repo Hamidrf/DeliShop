@@ -44,3 +44,16 @@ bump `appVersion`/`appVersionCode` in `android/twa-manifest.json`, run `bubblewr
 
 - `targetSdk` follows the Bubblewrap release; keep the CLI updated to meet Play's yearly target-API requirement.
 - Studio (admin) pages are inside the app too; if you don't want them reachable there, that needs an app-side route decision — say so.
+
+## Cafe Bazaar (Iran) build
+
+Bazaar does not re-sign apps, so the SHA-256 in `assetlinks.json` is that of our own
+`android/android.keystore` (alias `delishop`; kept out of git — back it up together with
+its password; losing it means you can never update the app on Bazaar).
+The build was produced with the Android SDK + `bubblewrap update` + `./gradlew bundleRelease`
+(Bubblewrap's own SDK check doesn't work with a bare cmdline-tools install), then signed
+with `jarsigner` (AAB) / `zipalign` + `apksigner` (APK).
+Note: `deliarte.ir` may be unreachable from outside Iran, so `bubblewrap init` from a
+foreign machine can fail; use `bubblewrap update` with `android/twa-manifest.json`.
+On devices without Chrome (common with Bazaar-only phones) the app falls back to Custom Tabs
+(`fallbackType`), which shows a browser bar.
