@@ -1,0 +1,9 @@
+*.keystore
+*.jks
+build/
+app-release-*
+*.apk
+*.aab
+key-info.txt
+work/
+*.idsig
