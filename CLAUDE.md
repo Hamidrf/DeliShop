@@ -49,6 +49,13 @@ Current routes (all under `/api`): `GET /health`, `GET /products`,
 `GET /studio/orders/:id`, `GET /studio/orders/:id/receipt`,
 `PATCH /studio/orders/:id`, plus the setup/deploy routes below.
 
+## Android app (Google Play)
+
+Shipped as a Trusted Web Activity wrapping the live site — see `ANDROID.md`.
+Don't change the manifest `id`/`scope`, the package name, or
+`/.well-known/assetlinks.json` without reading it; `sw.js` is deliberately
+non-caching (offline page only).
+
 ## Secrets and where they live
 
 Production config (DB credentials, `app_origin`, storage paths, and the two

@@ -1,0 +1,29 @@
+{
+  "packageId": "ir.deliarte.delishop",
+  "host": "deliarte.ir",
+  "name": "DeliShop",
+  "launcherName": "DeliShop",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#FBF8F2",
+  "themeColorDark": "#FBF8F2",
+  "navigationColor": "#FBF8F2",
+  "navigationColorDark": "#FBF8F2",
+  "backgroundColor": "#FBF8F2",
+  "enableNotifications": false,
+  "startUrl": "/?source=pwa",
+  "iconUrl": "https://deliarte.ir/assets/icon-512.png",
+  "maskableIconUrl": "https://deliarte.ir/assets/icon-maskable-512.png",
+  "webManifestUrl": "https://deliarte.ir/manifest.webmanifest",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "delishop"
+  },
+  "fallbackType": "customtabs",
+  "features": {},
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "generatorApp": "bubblewrap-cli"
+}
