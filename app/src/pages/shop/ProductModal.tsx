@@ -25,30 +25,38 @@ function Art({ p, size }: { p: Product; size: number }) {
   );
 }
 
-/** Swipeable gallery of a product's real photos, shown when there's more than one. */
+/**
+ * Swipeable gallery of a product's *other* real photos (the first one is
+ * already the hero image in the hand/ear/bag animation above, so it's left
+ * out here instead of repeating it).
+ */
 function PhotoSlider({ photos }: { photos: string[] }) {
   const [i, setI] = useState(0);
-  if (photos.length <= 1) return null;
+  if (photos.length === 0) return null;
   const prev = () => setI(v => (v - 1 + photos.length) % photos.length);
   const next = () => setI(v => (v + 1) % photos.length);
   return (
     <div className="pm-slider">
-      <button type="button" className="pm-slider-arrow" aria-label="Previous photo" onClick={prev}>‹</button>
-      <img src={photos[i]} alt="" className="pm-slider-img" />
-      <button type="button" className="pm-slider-arrow" aria-label="Next photo" onClick={next}>›</button>
-      <div className="pm-slider-dots">
-        {photos.map((_, idx) => (
-          <button
-            key={idx}
-            type="button"
-            className="pm-slider-dot"
-            aria-label={`Photo ${idx + 1} of ${photos.length}`}
-            aria-current={idx === i}
-            onClick={() => setI(idx)}
-            style={{ background: idx === i ? INK : '#fff' }}
-          />
-        ))}
+      <div className="pm-slider-main">
+        {photos.length > 1 && <button type="button" className="pm-slider-arrow" aria-label="Previous photo" onClick={prev}>‹</button>}
+        <img src={photos[i]} alt="" className="pm-slider-img" />
+        {photos.length > 1 && <button type="button" className="pm-slider-arrow" aria-label="Next photo" onClick={next}>›</button>}
       </div>
+      {photos.length > 1 && (
+        <div className="pm-slider-dots">
+          {photos.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className="pm-slider-dot"
+              aria-label={`Photo ${idx + 1} of ${photos.length}`}
+              aria-current={idx === i}
+              onClick={() => setI(idx)}
+              style={{ background: idx === i ? INK : '#fff' }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -123,12 +131,12 @@ export function ProductModal({ p, num, onClose }: { p: Product; num: number; onC
         <div className="pm-stage"><Stage p={p} /></div>
 
         <div className="pm-info">
+          <PhotoSlider photos={p.photos.slice(1)} />
+
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
             <span className="pm-num">{num}</span>
             <h2 id="pm-title" className="pm-name">{p.name}</h2>
           </div>
-
-          <PhotoSlider photos={p.photos} />
 
           <div className="pm-bubble">
             <p className="hand pm-story">{p.story}</p>
