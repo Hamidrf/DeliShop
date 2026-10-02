@@ -32,6 +32,12 @@ origin: the built frontend at the site root, the PHP API under `/api/*`.
 No CORS, no cross-site cookies — session auth is a plain `HttpOnly` cookie.
 MySQL is the database (not PostgreSQL — see "History"). Local dev setup is
 in `server-php/README.md`; hosting/deploy specifics are in `DEPLOY.md`.
+`deploy/root.htaccess` force-redirects plain `http://` to `https://` — it
+has to, since `app_origin` in the production config is the `https://`
+origin and `ds_check_origin()` in `index.php` rejects any request whose
+`Origin` header doesn't match it exactly (scheme included). Without that
+redirect the site loads fine over `http://` but every state-changing API
+call (placing an order, admin login, …) fails with `"Origin not allowed"`.
 
 ## The frontend and backend API contract is not type-shared — keep them in sync by hand
 

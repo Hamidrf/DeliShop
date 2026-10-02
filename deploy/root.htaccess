@@ -1,5 +1,13 @@
 RewriteEngine On
 
+# Force HTTPS. Without this, the site loads fine over plain http:// (Apache
+# serves the same files either way), but every state-changing API call then
+# fails with "Origin not allowed" -- app_origin in the server config is the
+# https:// origin, and ds_check_origin() in index.php rejects a request
+# whose Origin header doesn't match it exactly, http(s) scheme included.
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # /api/<rest> -> the PHP front controller, as a query string (PATH_INFO
 # handling varies too much across shared-hosting PHP configs to rely on).
 RewriteCond %{REQUEST_URI} ^/api/
