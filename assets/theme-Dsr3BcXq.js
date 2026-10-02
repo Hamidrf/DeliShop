@@ -1,0 +1,1 @@
+var e=`#1d1b19`,t={mint:`#97DDD6`,pink:`#FF97AB`,orange:`#FF844B`,purple:`#D383FF`,yellow:`#FFE24D`,green:`#B6FF80`},n=[`Keychains`,`Earrings`,`Pins`],r=[`All`,...n],i={All:e,Keychains:t.yellow,Earrings:t.pink,Pins:t.mint},a=e=>`/assets/bg/${e}.png`,o=e=>t[e]??`#fff`,s=`6219 8619 5193 7522`,c=`Delnia Firooze`;export{t as a,a as c,i,o as l,s as n,r as o,n as r,e as s,c as t};

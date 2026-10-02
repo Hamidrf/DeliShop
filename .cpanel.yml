@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/deliar/public_html/
+    - /bin/mkdir -p /home/deliar/uploads-private/receipts
+    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp -R .htaccess $DEPLOYPATH
